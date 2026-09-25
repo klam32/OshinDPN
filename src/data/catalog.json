@@ -1,0 +1,360 @@
+[
+  {
+    "id": "cleaning",
+    "name": "Vệ sinh công nghiệp",
+    "tagline": "Không gian sạch, khởi đầu mới",
+    "description": "Làm sạch nhà ở, văn phòng và công trình với quy trình phù hợp từng bề mặt.",
+    "icon": "sparkles",
+    "image": "/images/service-1.jpg",
+    "subservices": [
+      "Hằng ngày, định kỳ",
+      "Vệ sinh tấm pin năng lượng mặt trời",
+      "Sau xây dựng – Tổng vệ sinh",
+      "Giặt ghế, thảm, nệm, rèm cửa",
+      "Lau kính mặt dựng cao tầng"
+    ],
+    "fields": [
+      {
+        "key": "area",
+        "label": "Diện tích cần vệ sinh (m²)",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "condition",
+        "label": "Tình trạng",
+        "type": "select",
+        "required": true,
+        "options": ["Bụi bẩn thông thường", "Bẩn nhiều / sau xây dựng"]
+      },
+      {
+        "key": "frequency",
+        "label": "Tần suất",
+        "type": "select",
+        "required": true,
+        "options": ["Một lần", "Hằng tuần", "Hằng tháng"]
+      },
+      {
+        "key": "hours",
+        "label": "Thời gian dự kiến (giờ)",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      }
+    ],
+    "quantityKey": "area",
+    "unit": "m²",
+    "rate": 12000,
+    "active": true
+  },
+  {
+    "id": "labor",
+    "name": "Cung ứng lao động",
+    "tagline": "Nhân lực phù hợp, vận hành an tâm",
+    "description": "Hỗ trợ nhân lực cho văn phòng, nhà máy, kho bãi và hoạt động bốc xếp.",
+    "icon": "users",
+    "image": "/images/service-3.jpg",
+    "subservices": [
+      "Hợp thức nguồn lao động",
+      "Dịch vụ bốc xếp",
+      "Hỗ trợ nhà máy, xí nghiệp, kho bãi"
+    ],
+    "fields": [
+      {
+        "key": "workers",
+        "label": "Số nhân sự",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "days",
+        "label": "Số ngày làm việc",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "hours",
+        "label": "Số giờ mỗi ngày",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "tasks",
+        "label": "Công việc và yêu cầu chuyên môn",
+        "type": "text",
+        "required": true
+      }
+    ],
+    "quantityKey": "workers",
+    "unit": "người/ngày",
+    "rate": 350000,
+    "active": true
+  },
+  {
+    "id": "maintenance",
+    "name": "Bảo trì & làm mới",
+    "tagline": "Chăm chút công trình bền lâu",
+    "description": "Bảo trì cao ốc, sửa sang và thiết kế nội thất cho không gian của bạn.",
+    "icon": "tool",
+    "image": "/images/service-5.jpg",
+    "subservices": [
+      "Trang trí và thiết kế nội thất",
+      "Sửa sang và làm mới trọn gói",
+      "Bảo trì, bảo dưỡng cao ốc văn phòng"
+    ],
+    "fields": [
+      {
+        "key": "area",
+        "label": "Diện tích công trình (m²)",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "condition",
+        "label": "Hiện trạng công trình",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "items",
+        "label": "Hạng mục cần thực hiện",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "schedule",
+        "label": "Thời gian mong muốn",
+        "type": "text",
+        "required": true
+      }
+    ],
+    "quantityKey": "area",
+    "unit": "m²",
+    "rate": 25000,
+    "active": true
+  },
+  {
+    "id": "housekeeping",
+    "name": "Tạp vụ theo giờ",
+    "tagline": "Nhẹ việc nhà, thêm thời gian",
+    "description": "Chăm sóc nhà riêng và văn phòng theo giờ hoặc theo lịch định kỳ.",
+    "icon": "home",
+    "image": "/images/service-6.jpg",
+    "subservices": ["Tạp vụ cơ quan, văn phòng", "Tạp vụ nhà riêng"],
+    "fields": [
+      {
+        "key": "hours",
+        "label": "Số giờ mỗi buổi",
+        "type": "number",
+        "required": true,
+        "min": 2,
+        "max": 100000
+      },
+      {
+        "key": "sessions",
+        "label": "Số buổi",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "area",
+        "label": "Diện tích (m²)",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "frequency",
+        "label": "Tần suất",
+        "type": "select",
+        "required": true,
+        "options": ["Một lần", "Hằng ngày", "Hằng tuần", "Hằng tháng"]
+      },
+      {
+        "key": "tasks",
+        "label": "Công việc cần làm",
+        "type": "text",
+        "required": true
+      }
+    ],
+    "quantityKey": "hours",
+    "unit": "giờ",
+    "rate": 70000,
+    "active": true
+  },
+  {
+    "id": "pest",
+    "name": "Kiểm soát côn trùng",
+    "tagline": "Bảo vệ không gian sống",
+    "description": "Khảo sát và lên phương án kiểm soát côn trùng, khử trùng phù hợp.",
+    "icon": "shield",
+    "image": "/images/service-7.jpg",
+    "subservices": ["Phun thuốc, khử trùng", "Diệt chuột, ruồi, muỗi, kiến, gián"],
+    "fields": [
+      {
+        "key": "area",
+        "label": "Diện tích xử lý (m²)",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "pest",
+        "label": "Loại côn trùng / yêu cầu khử trùng",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "condition",
+        "label": "Mức độ",
+        "type": "select",
+        "required": true,
+        "options": ["Ít", "Trung bình", "Nhiều"]
+      },
+      {
+        "key": "notes",
+        "label": "Trẻ nhỏ, vật nuôi hoặc lưu ý khác",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "quantityKey": "area",
+    "unit": "m²",
+    "rate": 15000,
+    "active": true
+  },
+  {
+    "id": "moving",
+    "name": "Vận chuyển & di dời",
+    "tagline": "Chuyển nơi mới, trọn an tâm",
+    "description": "Đóng gói, vận chuyển nhà ở, văn phòng và nhà xưởng theo nhu cầu.",
+    "icon": "truck",
+    "image": "/images/service-2.jpg",
+    "subservices": ["Di dời cơ quan, văn phòng", "Di dời nhà ở", "Di dời xí nghiệp, nhà xưởng"],
+    "fields": [
+      {
+        "key": "destination",
+        "label": "Địa chỉ chuyển đến",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "items",
+        "label": "Danh sách hàng hóa và kích thước",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "quantity",
+        "label": "Số kiện hàng",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "distance",
+        "label": "Khoảng cách dự kiến (km)",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "floor",
+        "label": "Tầng cần vận chuyển",
+        "type": "number",
+        "required": true,
+        "min": 0,
+        "max": 100000
+      },
+      {
+        "key": "elevator",
+        "label": "Có thang máy?",
+        "type": "select",
+        "required": true,
+        "options": ["Có", "Không"]
+      },
+      {
+        "key": "packing",
+        "label": "Đóng gói",
+        "type": "select",
+        "required": true,
+        "options": ["Tự đóng gói", "Cần hỗ trợ đóng gói"]
+      }
+    ],
+    "quantityKey": "quantity",
+    "unit": "kiện",
+    "rate": 50000,
+    "active": true
+  },
+  {
+    "id": "garden",
+    "name": "Chăm sóc cây cảnh",
+    "tagline": "Thêm xanh cho mỗi ngày",
+    "description": "Chăm cây, thiết kế sân vườn và cung cấp cây xanh cho nhà ở, doanh nghiệp.",
+    "icon": "leaf",
+    "image": "/images/service-4.jpg",
+    "subservices": [
+      "Chăm sóc cây cảnh",
+      "Thiết kế, trang trí khuôn viên, sân vườn",
+      "Cung cấp cây xanh"
+    ],
+    "fields": [
+      {
+        "key": "quantity",
+        "label": "Số lượng cây",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "area",
+        "label": "Diện tích khuôn viên (m²)",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "max": 100000
+      },
+      {
+        "key": "species",
+        "label": "Loại cây",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "condition",
+        "label": "Tình trạng cây / yêu cầu thiết kế",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "frequency",
+        "label": "Tần suất",
+        "type": "select",
+        "required": true,
+        "options": ["Một lần", "Hằng tuần", "Hằng tháng"]
+      }
+    ],
+    "quantityKey": "quantity",
+    "unit": "cây",
+    "rate": 60000,
+    "active": true
+  }
+]

@@ -1,0 +1,15 @@
+node_modules/
+.npm-cache/
+dist/
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.local
+backend/.env
+backend/data/
+test-results/
+playwright-report/
+
+# Google Cloud service-account key
+/sacred-flash-501307-j0-e9f5de47097a.json

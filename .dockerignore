@@ -1,0 +1,31 @@
+# Source-control and local tooling
+.git
+.vscode
+.venv
+node_modules
+.npm-cache
+dist
+test-results
+playwright-report
+docs
+tests
+
+# Runtime data and credentials
+.env
+.env.*
+!.env.example
+backend/.env
+backend/data
+__pycache__
+*.pyc
+*.db
+*.sqlite*
+*service-account*.json
+*credentials*.json
+sacred-flash-501307-j0-e9f5de47097a.json
+
+# Non-runtime files
+README.md
+start.ps1
+playwright.config.js
+.prettierrc.json

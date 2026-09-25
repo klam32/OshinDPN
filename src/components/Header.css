@@ -1,0 +1,394 @@
+/* Header matched to the company's reference site. */
+.topbar.reference-topbar {
+  height: 35px;
+  background: #04244f;
+  color: #fff;
+}
+.reference-topbar .container {
+  justify-content: center;
+  position: relative;
+  height: 100%;
+}
+.reference-topbar p {
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+  padding: 0 30px;
+}
+.reference-topbar p a,
+.reference-topbar p span {
+  display: inline;
+}
+.reference-topbar p button {
+  font-size: inherit;
+  font-weight: 700;
+  padding: 0;
+  color: #fff;
+}
+.reference-topbar p a {
+  font-weight: 500;
+}
+.reference-topbar .announcement-close {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 5px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+.reference-topbar .announcement-close svg {
+  color: inherit;
+}
+.site-header.reference-header {
+  height: 89px;
+  background: #003d7e;
+  border: 0;
+  color: #ffff00;
+}
+.reference-header .nav-wrap {
+  gap: 24px;
+}
+.reference-header .logo.brand-logo {
+  width: 253px;
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
+}
+.reference-header nav.reference-nav {
+  display: flex;
+  align-items: stretch;
+  gap: 28px;
+  margin-left: auto;
+  height: 100%;
+}
+.reference-header .reference-nav .menu-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  gap: 6px;
+  color: #ffff00;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+.reference-header .reference-nav .menu-trigger:hover,
+.reference-header .reference-nav .is-expanded > .menu-trigger {
+  color: #fff;
+}
+.reference-header .reference-nav .menu-trigger:focus-visible {
+  outline: 2px solid #ffff00;
+  outline-offset: 6px;
+}
+.reference-header .reference-nav .menu-trigger.current:after {
+  display: none;
+}
+.reference-header .menu-group {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+.reference-header .reference-nav .dropdown-panel {
+  position: absolute;
+  top: 100%;
+  left: -20px;
+  min-width: 260px;
+  background: #fff;
+  color: #303030;
+  box-shadow: 0 8px 20px #00000012;
+  border: 1px solid #ececec;
+  z-index: 45;
+}
+.reference-header .reference-nav .dropdown-panel a,
+.reference-header .reference-nav .dropdown-panel button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: auto;
+  min-height: 49px;
+  text-align: left;
+  padding: 13px 20px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.6;
+  text-transform: none;
+  color: #333;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  gap: 8px;
+  white-space: normal;
+}
+.reference-header .reference-nav .dropdown-panel a:last-child,
+.reference-header .reference-nav .dropdown-panel button:last-child {
+  border-bottom: 0;
+}
+.reference-header .reference-nav .dropdown-panel a:hover,
+.reference-header .reference-nav .dropdown-panel button:hover,
+.reference-header .reference-nav .dropdown-panel button:focus-visible,
+.reference-header .reference-nav .service-expanded > .service-menu-trigger {
+  background: #f2f2f2;
+  color: #3438ff;
+}
+.reference-header .reference-nav .services-dropdown {
+  width: 365px;
+  left: -130px;
+}
+.services-dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.services-dropdown li {
+  position: relative;
+  border-bottom: 1px solid #eee;
+}
+.services-dropdown li:last-child {
+  border-bottom: 0;
+}
+.reference-header .reference-nav .services-dropdown .service-menu-trigger {
+  font-size: 13px;
+  min-height: 49px;
+}
+.reference-header .service-submenu {
+  position: absolute;
+  left: 100%;
+  top: -1px;
+  width: 355px;
+  background: white;
+  border: 1px solid #ececec;
+  box-shadow: 0 8px 20px #00000012;
+}
+.reference-header .reference-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-left: 1px solid #c6d6e2;
+  padding-left: 23px;
+  flex-shrink: 0;
+  height: 32px;
+}
+.reference-actions > a,
+.reference-actions > button {
+  padding: 0;
+  width: 28px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: #ffff00;
+}
+.reference-actions > a:hover,
+.reference-actions > button:hover {
+  color: #fff;
+}
+.reference-actions svg {
+  stroke-width: 1.2;
+}
+.reference-actions .reference-logout {
+  width: 20px;
+}
+.reference-actions .reference-mobile-toggle {
+  display: none;
+}
+.header-search-content {
+  padding: 24px;
+}
+.header-search-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #dce2e9;
+  border-radius: 6px;
+  padding: 0 12px;
+}
+.header-search-input input {
+  width: 100%;
+  border: none;
+  box-shadow: none;
+}
+.header-search-content h3 {
+  font-size: 14px;
+  margin: 24px 0 10px;
+}
+.header-search-results {
+  display: flex;
+  flex-direction: column;
+}
+.header-search-results button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e6e9ed;
+  gap: 14px;
+  text-align: left;
+  font-size: 12px;
+}
+.header-search-results button:hover {
+  color: #003d7e;
+  background: #f6f8fb;
+}
+.header-search-results b {
+  font-weight: 500;
+}
+.header-search-results small {
+  display: block;
+  font-size: 10px;
+  color: #84909c;
+  margin-top: 4px;
+}
+.menu-empty {
+  padding: 16px;
+}
+@media (min-width: 1181px) and (max-width: 1350px) {
+  .reference-header .logo.brand-logo {
+    width: 215px;
+  }
+  .reference-header nav.reference-nav {
+    gap: 20px;
+  }
+  .reference-header .reference-nav .menu-trigger {
+    font-size: 12px;
+    letter-spacing: 0.6px;
+  }
+  .reference-header .reference-actions {
+    gap: 11px;
+    padding-left: 17px;
+  }
+  .reference-header .reference-nav .services-dropdown {
+    width: 335px;
+    left: -150px;
+  }
+  .reference-header .service-submenu {
+    width: 315px;
+  }
+}
+@media (max-width: 1180px) {
+  .reference-header .logo.brand-logo {
+    width: 253px;
+  }
+  .reference-actions .reference-mobile-toggle {
+    display: grid;
+  }
+  .reference-header nav.reference-nav {
+    display: none;
+    margin: 0;
+  }
+  .reference-header nav.reference-nav.mobile-open {
+    display: flex;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    height: auto;
+    max-height: calc(100dvh - 125px);
+    overflow-y: auto;
+    background: #003d7e;
+    padding: 10px 24px 18px;
+    border-top: 1px solid #ffffff30;
+    box-shadow: 0 10px 20px #04244f33;
+  }
+  .reference-header .reference-nav .menu-trigger {
+    height: auto;
+    min-height: 48px;
+    padding: 14px 0;
+    font-size: 13px;
+    justify-content: space-between;
+    border-bottom: 1px solid #ffffff20;
+    width: 100%;
+  }
+  .reference-header .menu-group {
+    display: block;
+  }
+  .reference-header .reference-nav .dropdown-panel {
+    position: static;
+    min-width: 0;
+    width: 100%;
+    box-shadow: none;
+    border: 0;
+  }
+  .reference-header .reference-nav .services-dropdown {
+    width: 100%;
+  }
+  .reference-header .service-submenu {
+    position: static;
+    width: 100%;
+    border: 0;
+    box-shadow: none;
+  }
+  .reference-header .reference-nav .service-submenu button {
+    padding-left: 35px;
+    background: #f6f7f8;
+    font-size: 13px;
+  }
+  .reference-header .service-expanded > .service-menu-trigger svg {
+    transform: rotate(90deg);
+  }
+  .reference-header .reference-nav .dropdown-panel a,
+  .reference-header .reference-nav .dropdown-panel button {
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+}
+@media (max-width: 600px) {
+  .topbar.reference-topbar {
+    height: auto;
+    min-height: 34px;
+    padding: 5px 0;
+  }
+  .reference-topbar p {
+    font-size: 9px;
+    padding: 0 20px 0 0;
+  }
+  .reference-topbar .announcement-action {
+    display: none;
+  }
+  .site-header.reference-header {
+    height: 78px;
+  }
+  .reference-header .logo.brand-logo {
+    width: 205px;
+  }
+  .reference-header .nav-wrap {
+    gap: 8px;
+  }
+  .reference-header .reference-actions {
+    gap: 10px;
+    padding-left: 10px;
+    height: 28px;
+  }
+  .reference-actions > a,
+  .reference-actions > button {
+    width: 23px;
+    height: 28px;
+  }
+  .reference-actions svg {
+    width: 23px;
+    height: 23px;
+  }
+  .reference-header nav.reference-nav.mobile-open {
+    max-height: calc(100dvh - 125px);
+    padding-inline: 18px;
+  }
+}
+@media (max-width: 380px) {
+  .reference-header .logo.brand-logo {
+    width: 155px;
+  }
+  .reference-header .reference-actions {
+    gap: 7px;
+    padding-left: 7px;
+  }
+}
