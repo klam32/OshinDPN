@@ -1,0 +1,16 @@
+docs
+.venv
+node_modules
+.npm-cache
+dist
+test-results
+playwright-report
+backend/data
+backend/.env
+.env
+.env.local
+*.db
+*.sqlite*
+sacred-flash-501307-j0-e9f5de47097a.json
+Dockerfile
+start.ps1

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "regions": ["sin1"],
+  "functions": {
+    "api/**/*.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{docs/**,tests/**,test-results/**,playwright-report/**,public/**,dist/**,node_modules/**,.venv/**,backend/test_app.py}"
+    }
+  }
+}

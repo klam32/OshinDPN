@@ -188,7 +188,7 @@ src/
   index.css                # Hệ thống màu, bố cục và responsive
 backend/
   main.py                  # API, phân quyền, trạng thái và kiểm tra dữ liệu
-  db.py                    # SQLite, khởi tạo danh mục và nội dung
+  db.py                    # SQLite local / PostgreSQL production, schema và dữ liệu khởi tạo
   logic.py                 # Chiết tính, Nở, Excel, SMTP
   manage.py                # Tạo Admin
   data/oshin.db            # Dữ liệu thực tế, không commit
@@ -197,6 +197,45 @@ tests/                     # Kiểm thử trình duyệt
 ```
 
 Phiên đăng nhập và phiên khách vãng lai tồn tại 7 ngày. Đăng ký tài khoản giúp khách xem lại yêu cầu sau khi đổi thiết bị hoặc hết phiên. Mật khẩu được băm scrypt, endpoint quản trị kiểm tra vai trò ở server, file Excel kiểm tra chủ sở hữu và lưu văn bản nhập vào dưới dạng chuỗi để tránh Excel thực thi công thức.
+
+## Deploy frontend và backend cùng Vercel
+
+Vercel build React từ `package.json` và đóng gói `api/index.py` thành một Python Function chạy FastAPI. Frontend và `/api/*` dùng chung domain nên không cần URL API công khai riêng.
+
+1. Import repository GitHub `klam32/OshinDPN`, giữ **Root Directory** là thư mục gốc, Framework Preset là **Vite** và các Build Settings lấy từ `vercel.json`.
+2. Trước khi dùng chức năng động, mở **Storage → Create Database → Neon**, tạo PostgreSQL cùng region Singapore và kết nối vào project. Integration cung cấp `DATABASE_URL`; backend tự tạo schema và dữ liệu khởi tạo khi Function bắt đầu.
+3. Trong **Settings → Environment Variables**, thêm các biến production bên dưới rồi Redeploy:
+
+```dotenv
+AUTH_SECRET=chuoi_ngau_nhien_it_nhat_32_ky_tu
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=mat_khau_admin_it_nhat_12_ky_tu
+COOKIE_SECURE=true
+ALLOWED_ORIGINS=https://ten-project.vercel.app
+FRONTEND_URL=https://ten-project.vercel.app
+FEEDBACK_ADMIN_EMAIL=admin@example.com
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=https://ten-project.vercel.app/api/auth/google/callback
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASSWORD=
+SMTP_FROM=
+SMTP_TLS=true
+
+LLM_NAME=vertex
+VERTEX_MODEL_NAME=gemini-2.5-flash
+PROJECT_ID=
+LOCATION=us-central1
+GOOGLE_APPLICATION_CREDENTIALS_BASE64=
+```
+
+Không đặt `DATABASE_PATH` trên Vercel. Không đưa file JSON service account lên deployment; dùng `GOOGLE_APPLICATION_CREDENTIALS_BASE64`. Sau khi biết domain production, thêm chính xác URL callback HTTPS vào Google Cloud Console. Vercel Preview tự được backend chấp nhận làm origin, còn Google OAuth nên dùng domain production cố định.
+
+Kiểm tra sau deploy: mở `/api/health`, sau đó thử đăng ký để xác nhận SMTP/OTP, đăng nhập Google, tạo yêu cầu và mở trang Admin. Nếu đổi Environment Variables, phải Redeploy để deployment mới nhận giá trị.
 
 ## Deploy bằng Docker / Blitz
 

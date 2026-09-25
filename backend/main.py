@@ -22,7 +22,7 @@ from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.oauth2 import id_token as google_id_token
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .db import ROOT, connect, dump, init_db, password_hash, services, settings, verify_password
+from .db import INTEGRITY_ERRORS, ROOT, connect, dump, init_db, password_hash, services, settings, verify_password
 from .logic import ai_ready, calculate, deliver_mail, export_order, feedback_admin_message, feedback_customer_message, load_order, process_order, queue_mail, reply_no, workbook
 
 load_dotenv(ROOT / 'backend/.env')
@@ -42,8 +42,14 @@ rate_lock = Lock()
 @app.middleware('http')
 async def protections(request, call_next):
     if request.url.path.startswith('/api') and request.method not in ('GET', 'HEAD', 'OPTIONS'):
-        origins = os.getenv('ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000').split(',')
-        if request.headers.get('origin') and request.headers['origin'] not in origins:
+        origins = {value.strip().rstrip('/') for value in os.getenv(
+            'ALLOWED_ORIGINS',
+            'http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000',
+        ).split(',') if value.strip()}
+        for name in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL'):
+            if os.getenv(name):
+                origins.add(f"https://{os.environ[name].strip().rstrip('/')}")
+        if request.headers.get('origin', '').rstrip('/') not in origins and request.headers.get('origin'):
             return JSONResponse({'detail': 'Nguồn yêu cầu không hợp lệ.'}, status_code=403)
         if request.headers.get('x-requested-with') != 'OshinWeb':
             return JSONResponse({'detail': 'Thiếu xác thực nguồn yêu cầu.'}, status_code=403)
@@ -84,7 +90,7 @@ def identity(request: Request, response: Response):
         if not session:
             token = secrets.token_urlsafe(32)
             c.execute('INSERT INTO sessions(id,expires) VALUES(?,?)', (token, now + 86400 * 7))
-            response.set_cookie('oshin_session', token, httponly=True, samesite='lax', secure=os.getenv('COOKIE_SECURE', 'false').lower() == 'true', max_age=86400 * 7)
+            response.set_cookie('oshin_session', token, httponly=True, samesite='lax', secure=os.getenv('COOKIE_SECURE', 'false').lower() == 'true' or bool(os.getenv('VERCEL')), max_age=86400 * 7)
     return {'session': token, 'owner': user['id'] if user else token, 'user': dict(user) if user else None}
 
 def admin(person=Depends(identity)):
@@ -134,7 +140,7 @@ def me(person=Depends(identity)): return {'user': person['user']}
 def set_session_cookie(response, token):
     response.set_cookie(
         'oshin_session', token, httponly=True, samesite='lax',
-        secure=os.getenv('COOKIE_SECURE', 'false').lower() == 'true', max_age=86400 * 7,
+        secure=os.getenv('COOKIE_SECURE', 'false').lower() == 'true' or bool(os.getenv('VERCEL')), max_age=86400 * 7,
     )
 
 
@@ -239,12 +245,11 @@ def verify_otp(data: OtpVerify, response: Response, person=Depends(identity)):
         c.execute('UPDATE auth_otp SET consumed=1 WHERE id=?', (row['id'],))
         challenge = dict(row)
     if challenge['purpose'] == 'register':
-        import sqlite3
         user = {'id': secrets.token_hex(16), 'name': challenge['name'], 'email': challenge['email'], 'role': 'customer'}
         try:
             with connect() as c:
                 c.execute('INSERT INTO users VALUES(?,?,?,?,?,1,?)', (user['id'], user['name'], user['email'], challenge['password'], 'customer', time.time()))
-        except sqlite3.IntegrityError:
+        except INTEGRITY_ERRORS:
             raise HTTPException(409, 'Email đã được đăng ký.')
     else:
         with connect() as c:
@@ -677,5 +682,5 @@ def retry(identifier: str, tasks: BackgroundTasks, person=Depends(admin)):
     tasks.add_task(deliver_mail, identifier)
     return {'ok': True}
 
-if (ROOT / 'dist').exists():
+if not os.getenv('VERCEL') and (ROOT / 'dist').exists():
     app.mount('/', StaticFiles(directory=ROOT / 'dist', html=True), name='web')
