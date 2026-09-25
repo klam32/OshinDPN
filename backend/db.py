@@ -53,6 +53,8 @@ class Connection:
 
 @contextmanager
 def connect():
+    if os.getenv('VERCEL') and not is_postgres():
+        raise RuntimeError('Vercel requires DATABASE_URL from a persistent PostgreSQL integration.')
     if is_postgres():
         if psycopg is None:
             raise RuntimeError('DATABASE_URL requires psycopg[binary].')
