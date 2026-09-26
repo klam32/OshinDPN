@@ -3,6 +3,7 @@ import { api, date, money, statuses } from '../lib/api';
 import { Empty, ErrorNotice, Field, Icon, Logo, Modal } from './ui';
 import { QuoteTable } from './Booking';
 import { ContentPanel, PageEditor, PriceEditor, PricingPanel } from './ContentAdmin';
+import HaravanBlogEditor from './HaravanBlogEditor';
 
 const tabs = [
   ['overview', 'grid', 'Tổng quan'],
@@ -299,101 +300,17 @@ function ServiceEditor({ service, mutate, onClose }) {
   );
 }
 
-function BlogEditor({ blog, mutate, onClose }) {
-  const [form, setForm] = useState(
-    blog
-      ? {
-          title: blog.title,
-          category: blog.category,
-          excerpt: blog.excerpt,
-          body: blog.body,
-          image: blog.image,
-          published: !!blog.published,
-        }
-      : {
-          title: '',
-          category: 'Góc chia sẻ',
-          excerpt: '',
-          body: '',
-          image: '/images/hero.jpg',
-          published: false,
-        },
-  );
-  const [error, setError] = useState(''),
-    [busy, setBusy] = useState(false);
-  const input = (key, value) => setForm((f) => ({ ...f, [key]: value }));
-  async function submit(e) {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      await mutate(`/admin/blogs/${blog?.id || crypto.randomUUID()}`, 'PUT', form);
-      onClose();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
-  }
+function BlogEditor({ blog, mutate, onClose, onDelete }) {
   return (
-    <Modal wide title={blog ? 'Chỉnh sửa bài viết' : 'Viết bài mới'} onClose={onClose}>
-      <form className="editor-body" onSubmit={submit}>
-        <Field
-          label="Tiêu đề"
-          required
-          minLength={5}
-          value={form.title}
-          onChange={(e) => input('title', e.target.value)}
-        />
-        <div className="form-grid">
-          <Field
-            label="Chuyên mục"
-            required
-            minLength={2}
-            value={form.category}
-            onChange={(e) => input('category', e.target.value)}
-          />
-          <Field
-            label="Ảnh bài viết"
-            value={form.image}
-            onChange={(e) => input('image', e.target.value)}
-          />
-        </div>
-        <Field label="Tóm tắt">
-          <textarea
-            required
-            minLength={5}
-            maxLength={500}
-            rows={2}
-            value={form.excerpt}
-            onChange={(e) => input('excerpt', e.target.value)}
-          />
-        </Field>
-        <Field label="Nội dung (xuống dòng trống để ngắt đoạn)">
-          <textarea
-            required
-            minLength={20}
-            maxLength={20000}
-            rows={12}
-            value={form.body}
-            onChange={(e) => input('body', e.target.value)}
-          />
-        </Field>
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={form.published}
-            onChange={(e) => input('published', e.target.checked)}
-          />{' '}
-          Xuất bản công khai
-        </label>
-        <ErrorNotice error={error} />
-        <button className="button primary" disabled={busy}>
-          {busy ? 'Đang lưu...' : 'Lưu bài viết'}
-        </button>
-      </form>
-    </Modal>
+    <HaravanBlogEditor
+      blog={blog}
+      mutate={mutate}
+      onClose={onClose}
+      onDelete={onDelete}
+    />
   );
 }
+
 
 function FeedbackEditor({ item, mutate, onClose }) {
   const [status, setStatus] = useState(item.status),
@@ -728,22 +645,24 @@ export default function Admin({ user, logout, onUpdate }) {
         </div>
       </aside>
       <div className="admin-main">
-        <header className="admin-header">
-          <div>
-            <span className="eyebrow">ĐẤT PHƯƠNG NAM</span>
-            <h1>{tabs.find((t) => t[0] === tab)?.[2]}</h1>
-          </div>
-          <div className="admin-profile">
-            <button
-              className={`presence-toggle ${online ? 'online' : ''}`}
-              onClick={() => setOnline(!online)}
-            >
-              <i />
-              {online ? 'Đang nhận tư vấn' : 'Đang ngoại tuyến'}
-            </button>
-            <span className="admin-avatar">{user.name[0]}</span>
-          </div>
-        </header>
+        {!(tab === 'blogs' && edit?.type === 'blog') && (
+          <header className="admin-header">
+            <div>
+              <span className="eyebrow">ĐẤT PHƯƠNG NAM</span>
+              <h1>{tabs.find((t) => t[0] === tab)?.[2]}</h1>
+            </div>
+            <div className="admin-profile">
+              <button
+                className={`presence-toggle ${online ? 'online' : ''}`}
+                onClick={() => setOnline(!online)}
+              >
+                <i />
+                {online ? 'Đang nhận tư vấn' : 'Đang ngoại tuyến'}
+              </button>
+              <span className="admin-avatar">{user.name[0]}</span>
+            </div>
+          </header>
+        )}
         <div className="admin-content">
           <ErrorNotice error={error} />
           {notice && (
@@ -1003,63 +922,104 @@ export default function Admin({ user, logout, onUpdate }) {
                 </>
               )}
               {tab === 'blogs' && (
-                <>
-                  <div className="panel-heading">
-                    <p>Xuất bản nội dung hữu ích dành cho khách hàng.</p>
-                    <button
-                      className="button primary small"
-                      onClick={() => setEdit({ type: 'blog', value: null })}
-                    >
-                      <Icon name="plus" />
-                      Viết bài mới
-                    </button>
-                  </div>
-                  <div className="admin-panel">
-                    <div className="table-scroll">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>Bài viết</th>
-                            <th>Chuyên mục</th>
-                            <th>Hiển thị</th>
-                            <th>Thao tác</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {data.blogs.map((b) => (
-                            <tr key={b.id}>
-                              <td>
-                                <b>{b.title}</b>
-                              </td>
-                              <td>{b.category}</td>
-                              <td>
-                                <span className="status">
-                                  {b.published ? 'Đã xuất bản' : 'Bản nháp'}
-                                </span>
-                              </td>
-                              <td>
-                                <div className="button-row">
-                                  <button
-                                    className="text-button"
-                                    onClick={() => setEdit({ type: 'blog', value: b })}
-                                  >
-                                    Chỉnh sửa
-                                  </button>
-                                  <button
-                                    className="text-button danger"
-                                    onClick={() => setEdit({ type: 'deleteBlog', value: b })}
-                                  >
-                                    Xóa
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                edit?.type === 'blog' ? (
+                  <HaravanBlogEditor
+                    blog={edit.value}
+                    mutate={mutate}
+                    onClose={closeEdit}
+                    onDelete={(b) => setEdit({ type: 'deleteBlog', value: b })}
+                  />
+                ) : (
+                  <>
+                    <div className="panel-heading">
+                      <p>Xuất bản bài viết và quản lý chuyên mục blog theo phong cách Haravan.</p>
+                      <button
+                        className="button primary small"
+                        onClick={() => setEdit({ type: 'blog', value: null })}
+                      >
+                        <Icon name="plus" />
+                        Viết bài mới
+                      </button>
                     </div>
-                  </div>
-                </>
+                    <div className="admin-panel">
+                      <div className="table-scroll">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th style={{ width: '64px' }}>Ảnh</th>
+                              <th>Bài viết</th>
+                              <th>Người viết</th>
+                              <th>Chuyên mục</th>
+                              <th>Hiển thị</th>
+                              <th>Thao tác</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {data.blogs.map((b) => (
+                              <tr key={b.id}>
+                                <td>
+                                  <img
+                                    src={b.image || '/images/hero.jpg'}
+                                    alt=""
+                                    style={{
+                                      width: '48px',
+                                      height: '36px',
+                                      objectFit: 'cover',
+                                      borderRadius: '4px',
+                                      display: 'block',
+                                    }}
+                                  />
+                                </td>
+                                <td>
+                                  <b>{b.title}</b>
+                                  <div style={{ fontSize: '11px', color: '#637381', marginTop: '2px' }}>
+                                    Mã: {b.id}
+                                  </div>
+                                </td>
+                                <td>{b.author || 'Khoa Lam'}</td>
+                                <td>
+                                  <span
+                                    style={{
+                                      background: '#f4f6f8',
+                                      border: '1px solid #dfe3e8',
+                                      padding: '3px 8px',
+                                      borderRadius: '4px',
+                                      fontSize: '12px',
+                                      fontWeight: 500,
+                                    }}
+                                  >
+                                    {b.category}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span className={`status ${b.published ? 'confirmed' : 'new'}`}>
+                                    {b.published ? 'Hiển thị' : 'Ẩn'}
+                                  </span>
+                                </td>
+                                <td>
+                                  <div className="button-row">
+                                    <button
+                                      className="text-button"
+                                      onClick={() => setEdit({ type: 'blog', value: b })}
+                                    >
+                                      Chỉnh sửa
+                                    </button>
+                                    <button
+                                      className="text-button danger"
+                                      onClick={() => setEdit({ type: 'deleteBlog', value: b })}
+                                    >
+                                      Xóa
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </>
+                )
               )}
               {tab === 'users' && (
                 <div className="admin-panel">
@@ -1257,9 +1217,6 @@ export default function Admin({ user, logout, onUpdate }) {
       )}
       {edit?.type === 'service' && (
         <ServiceEditor service={edit.value} mutate={mutate} onClose={closeEdit} />
-      )}
-      {edit?.type === 'blog' && (
-        <BlogEditor blog={edit.value} mutate={mutate} onClose={closeEdit} />
       )}
       {edit?.type === 'feedback' && (
         <FeedbackEditor item={edit.value} mutate={mutate} onClose={closeEdit} />

@@ -75,6 +75,10 @@ function Sidebar({ pages, active, openChat, settings }) {
 }
 
 export function TextBody({ body, headings = false }) {
+  if (!body) return null;
+  if (/<[a-z][\s\S]*>/i.test(body)) {
+    return <div className="page-prose" dangerouslySetInnerHTML={{ __html: body }} />;
+  }
   return (
     <div className="page-prose">
       {body

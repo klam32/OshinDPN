@@ -668,18 +668,24 @@ def save_service(identifier: str, data: ServiceInput, person=Depends(admin)):
     with connect() as c: c.execute('INSERT INTO services VALUES(?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data', (identifier, dump(data.model_dump())))
     return {'ok': True}
 
-class BlogInput(StrictModel):
-    title: str = Field(min_length=5, max_length=200)
-    category: str = Field(min_length=2, max_length=100)
-    excerpt: str = Field(min_length=5, max_length=500)
-    body: str = Field(min_length=20, max_length=20000)
-    image: str = Field(max_length=500)
-    published: bool
+class BlogInput(BaseModel):
+    model_config = ConfigDict(extra='ignore', str_strip_whitespace=True)
+    title: str = Field(min_length=3, max_length=250)
+    category: str = Field(default='Tin mới', min_length=1, max_length=100)
+    excerpt: str = Field(default='', max_length=1000)
+    body: str = Field(min_length=1, max_length=50000)
+    image: str = Field(default='', max_length=500)
+    published: bool = True
+    author: str = Field(default='Khoa Lam', max_length=100)
+    tags: list[str] = Field(default_factory=list)
+    seo_title: str = Field(default='', max_length=250)
+    seo_description: str = Field(default='', max_length=500)
+    template: str = Field(default='article', max_length=50)
 
 @app.put('/api/admin/blogs/{identifier}')
 def save_blog(identifier: str, data: BlogInput, person=Depends(admin)):
     if not re.fullmatch(r'[a-zA-Z0-9-]{1,80}', identifier): raise HTTPException(422, 'Mã bài viết không hợp lệ.')
-    with connect() as c: c.execute('INSERT INTO blogs VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,category=excluded.category,excerpt=excluded.excerpt,body=excluded.body,image=excluded.image,published=excluded.published', (identifier, data.title, data.category, data.excerpt, data.body, data.image, data.published, time.time()))
+    with connect() as c: c.execute('INSERT INTO blogs VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,category=excluded.category,excerpt=excluded.excerpt,body=excluded.body,image=excluded.image,published=excluded.published', (identifier, data.title, data.category, data.excerpt or data.title[:150], data.body, data.image or '/images/hero.jpg', 1 if data.published else 0, time.time()))
     return {'ok': True}
 
 @app.delete('/api/admin/blogs/{identifier}')
