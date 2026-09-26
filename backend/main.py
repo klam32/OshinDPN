@@ -78,6 +78,12 @@ async def protections(request, call_next):
     if request.url.path.startswith('/api'): result.headers['Cache-Control'] = 'no-store'
     return result
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, HTTPException):
+        return JSONResponse(status_code=exc.status_code, content={'detail': exc.detail})
+    return JSONResponse(status_code=500, content={'detail': f'Lỗi hệ thống ({type(exc).__name__}): {str(exc)}'})
+
 def identity(request: Request, response: Response):
     token = request.cookies.get('oshin_session', '')
     now = time.time()
@@ -662,8 +668,8 @@ def create_user(data: CreateUserInput, person=Depends(admin)):
             raise HTTPException(422, 'Email này đã tồn tại trong hệ thống.')
         identifier = secrets.token_hex(16)
         c.execute(
-            'INSERT INTO users(id,name,email,password,role,active,created) VALUES(?,?,?,?,?,1,?)',
-            (identifier, data.name.strip(), email, password_hash(data.password), data.role, time.time())
+            'INSERT INTO users(id,name,email,password,role,active,created) VALUES(?,?,?,?,?,?,?)',
+            (identifier, data.name.strip(), email, password_hash(data.password), data.role, 1, time.time())
         )
     return {'ok': True, 'id': identifier}
 
@@ -675,7 +681,7 @@ class UserUpdate(StrictModel):
 def update_user(identifier: str, data: UserUpdate, person=Depends(admin)):
     if identifier == person['user']['id']: raise HTTPException(422, 'Không thể thay đổi quyền hoặc khóa chính tài khoản đang sử dụng.')
     with connect() as c:
-        if not c.execute('UPDATE users SET active=?,role=? WHERE id=?', (data.active, data.role, identifier)).rowcount: raise HTTPException(404, 'Không tìm thấy tài khoản.')
+        if not c.execute('UPDATE users SET active=?,role=? WHERE id=?', (1 if data.active else 0, data.role, identifier)).rowcount: raise HTTPException(404, 'Không tìm thấy tài khoản.')
         c.execute('DELETE FROM sessions WHERE user_id=?', (identifier,))
     return {'ok': True}
 

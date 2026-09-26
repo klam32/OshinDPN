@@ -26,7 +26,8 @@ export async function api(path, options = {}) {
             : 'Thông tin chưa hợp lệ. Hãy kiểm tra các trường bắt buộc.';
       throw new Error(msg);
     }
-    throw new Error('Máy chủ đang xử lý yêu cầu hoặc gặp lỗi tạm thời. Vui lòng thử lại sau giây lát.');
+    const errText = await response.text().catch(() => '');
+    throw new Error(errText && errText.length < 200 ? errText : 'Máy chủ đang xử lý yêu cầu hoặc gặp lỗi tạm thời. Vui lòng thử lại sau giây lát.');
   }
   if (!contentType.includes('application/json'))
     throw new Error('Máy chủ chưa sẵn sàng. Vui lòng thử lại sau.');

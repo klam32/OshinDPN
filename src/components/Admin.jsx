@@ -605,6 +605,7 @@ export default function Admin({ user, logout, onUpdate }) {
     return result;
   };
   const action = async (path, method, body) => {
+    setError('');
     try {
       await mutate(path, method, body);
     } catch (e) {
