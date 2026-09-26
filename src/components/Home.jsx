@@ -280,9 +280,23 @@ export default function Home({ data, openBooking, openChat, openBlog }) {
               <Icon name="check" /> Đồng hành sau khi hoàn thành
             </span>
           </div>
-          <button className="text-button" onClick={openChat}>
-            Kết nối với chúng tôi <Icon name="arrow" size={18} />
-          </button>
+          <a className="text-button" href="#/gioi-thieu">Tìm hiểu về công ty <Icon name="arrow" size={18} /></a>
+        </div>
+      </section>
+      <section className="stats-strip">
+        <div className="container stats-grid">
+          {[
+            ['20+', 'Năm kinh nghiệm', 'Tiên phong từ 2004 tại Cần Thơ'],
+            ['7', 'Lĩnh vực dịch vụ', 'Từ vệ sinh đến cảnh quan & nhân lực'],
+            ['2.000+', 'Lao động đồng hành', 'Tạo việc làm ổn định tại miền Tây'],
+            ['Cần Thơ', '& Đồng bằng SCL', 'Phủ sóng rộng khắp khu vực'],
+          ].map(([num, title, desc]) => (
+            <div key={num} className="stat-card">
+              <strong>{num}</strong>
+              <span>{title}</span>
+              <small>{desc}</small>
+            </div>
+          ))}
         </div>
       </section>
       <section className="no-banner container">
@@ -303,6 +317,45 @@ export default function Home({ data, openBooking, openChat, openBlog }) {
         </button>
         <span className="banner-flower">✳</span>
       </section>
+      <section className="partners-section container">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">ĐỐI TÁC & KHÁCH HÀNG</span>
+            <h2>
+              Đồng hành cùng <em>hơn 1.000+ doanh nghiệp</em>
+            </h2>
+            <p>Được tín nhiệm bởi các tổ chức tài chính, bệnh viện, trường học và tập đoàn tại miền Tây.</p>
+          </div>
+          <a href="#/lien-he" className="text-button">
+            Hợp tác cùng chúng tôi <Icon name="arrow" size={18} />
+          </a>
+        </div>
+        <div className="partners-showcase">
+          <div className="partners-banner">
+            <img
+              src="https://cdn.hstatic.net/200001053360/file/khachhangtieubieu_642cb7148f264bdd8bb19fb8d9121277_grande.jpg"
+              alt="Khách hàng và đối tác tiêu biểu Đất Phương Nam"
+              loading="lazy"
+            />
+          </div>
+          <div className="partners-video-card">
+            <div className="video-responsive">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/Q4LAiDmdRmc?rel=0"
+                title="Giới thiệu dịch vụ Oshin Thời Đại - Đất Phương Nam"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+            <div className="video-caption">
+              <span className="caption-tag">HOẠT ĐỘNG THỰC TẾ</span>
+              <h4>Xem quy trình phục vụ chuyên nghiệp của Đất Phương Nam</h4>
+              <p>Trực tiếp ghi nhận tại các công trình văn phòng, cao ốc và nhà xưởng đối tác.</p>
+            </div>
+          </div>
+        </div>
+      </section>
       <section className="section container" id="blog">
         <div className="section-heading">
           <div>
@@ -312,6 +365,7 @@ export default function Home({ data, openBooking, openChat, openBlog }) {
             </h2>
             <p>Kinh nghiệm hữu ích cho không gian sống và làm việc của bạn.</p>
           </div>
+          <a className="text-button" href="#/tin-tuc">Xem tất cả tin tức <Icon name="arrow" size={18}/></a>
         </div>
         <div className="blog-grid">
           {blogs.length ? (

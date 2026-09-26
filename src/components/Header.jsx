@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Empty, Icon, Logo, Modal } from './ui';
 import './Header.css';
+import company from '../data/company.json';
+import { categoryHref, pageHref, sortedPages } from './Pages';
 
 const groupNames = {
   cleaning: 'Dịch vụ vệ sinh công nghiệp',
@@ -22,6 +24,7 @@ const normalize = (text) =>
 export default function Header({
   services,
   blogs,
+  pages,
   settings,
   user,
   route,
@@ -151,9 +154,11 @@ export default function Header({
               'about',
               'Giới thiệu',
               <>
-                <a href="#about" onClick={closeMenus}>
-                  Về Đất Phương Nam
-                </a>
+                {sortedPages(pages).map((p) => (
+                  <a key={p.id} href={pageHref(p.id)} onClick={closeMenus}>
+                    {p.nav_title}
+                  </a>
+                ))}
                 <a href="#process" onClick={closeMenus}>
                   Quy trình dịch vụ
                 </a>
@@ -229,30 +234,26 @@ export default function Header({
                 <button onClick={() => book(undefined, 'survey')}>Tư vấn dự án mới</button>
               </>,
             )}
-            <button className="menu-trigger" onClick={() => book()}>
+            <a className="menu-trigger" href="#/bang-gia" onClick={closeMenus}>
               Bảng giá
-            </button>
+            </a>
             {group(
               'news',
               'Tin tức',
               <>
-                <a href="#blog" onClick={closeMenus}>
+                <a href="#/tin-tuc" onClick={closeMenus}>
                   Tất cả bài viết
                 </a>
-                {[...new Set(blogs.map((b) => b.category))].map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => {
-                      closeMenus();
-                      onBlog(blogs.find((b) => b.category === category));
-                    }}
-                  >
-                    {category}
-                  </button>
-                ))}
+                {[...new Set([...company.categories, ...blogs.map((b) => b.category)])].map(
+                  (category) => (
+                    <a key={category} href={categoryHref(category)} onClick={closeMenus}>
+                      {category}
+                    </a>
+                  ),
+                )}
               </>,
             )}
-            <a className="menu-trigger" href="#contact" onClick={closeMenus}>
+            <a className="menu-trigger" href="#/lien-he" onClick={closeMenus}>
               Liên hệ
             </a>
           </nav>

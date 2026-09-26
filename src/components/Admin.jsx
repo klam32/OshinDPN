@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, date, money, statuses } from '../lib/api';
 import { Empty, ErrorNotice, Field, Icon, Logo, Modal } from './ui';
 import { QuoteTable } from './Booking';
+import { ContentPanel, PageEditor, PriceEditor, PricingPanel } from './ContentAdmin';
 
 const tabs = [
   ['overview', 'grid', 'Tổng quan'],
@@ -9,6 +10,8 @@ const tabs = [
   ['chat', 'chat', 'Tư vấn trực tiếp'],
   ['services', 'home', 'Quản lý dịch vụ'],
   ['blogs', 'file', 'Bài viết & Blog'],
+  ['pages', 'file', 'Trang giới thiệu'],
+  ['pricing', 'file', 'Bảng giá công khai'],
   ['users', 'users', 'Tài khoản'],
   ['feedback', 'report', 'Phản hồi & báo lỗi'],
   ['outbox', 'mail', 'Hàng đợi email'],
@@ -18,6 +21,7 @@ const mailKinds = {
   order_received: 'Yêu cầu dịch vụ',
   feedback_admin: 'Phản hồi mới → Admin',
   feedback_customer: 'Kết quả xử lý → Khách hàng',
+  contact_admin: 'Liên hệ mới → Admin',
 };
 const transitions = {
   new: ['surveying', 'confirmed', 'cancelled'],
@@ -414,7 +418,8 @@ function FeedbackEditor({ item, mutate, onClose }) {
         }}
       >
         <span className="status">
-          {item.data.category} · {item.data.rating}/5 sao
+          {item.data.category}
+          {item.data.rating > 0 ? ` · ${item.data.rating}/5 sao` : ''}
         </span>
         <h3>{item.data.subject}</h3>
         <p>{item.data.content}</p>
@@ -495,6 +500,11 @@ function Settings({ data, mutate }) {
         {field('hotline', 'Hotline')}
         {field('email', 'Email Admin nhận yêu cầu', 'email')}
         {field('address', 'Địa chỉ / khu vực phục vụ')}
+        {field('legal_name', 'Tên pháp lý công ty')}
+        {field('tax_code', 'Mã số thuế')}
+        {field('landline', 'Điện thoại văn phòng')}
+        {field('working_hours', 'Giờ làm việc')}
+        {field('map_url', 'Đường dẫn Google Maps', 'url')}
       </div>
       <h3>Nội dung trang chủ</h3>
       <Field label="Tiêu đề chính (mỗi dòng là một dòng hiển thị)">
@@ -1125,7 +1135,8 @@ export default function Admin({ user, logout, onUpdate }) {
                               <td>
                                 {f.data.subject}
                                 <small>
-                                  {f.data.category} · {f.data.rating}/5 sao
+                                  {f.data.category}
+                                  {f.data.rating > 0 ? ` · ${f.data.rating}/5 sao` : ''}
                                 </small>
                               </td>
                               <td>
@@ -1207,12 +1218,35 @@ export default function Admin({ user, logout, onUpdate }) {
                 </div>
               )}
               {tab === 'settings' && <Settings data={data.settings} mutate={mutate} />}
+              {tab === 'pages' && (
+                <ContentPanel
+                  pages={data.pages || []}
+                  onEdit={(p) => setEdit({ type: 'page', value: p })}
+                />
+              )}
+              {tab === 'pricing' && (
+                <PricingPanel
+                  items={data.pricing || []}
+                  onEdit={(p) => setEdit({ type: 'price', value: p })}
+                />
+              )}
             </>
           )}
         </div>
       </div>
       {edit?.type === 'order' && (
         <OrderEditor order={edit.value} mutate={mutate} onClose={closeEdit} />
+      )}
+      {edit?.type === 'page' && (
+        <PageEditor page={edit.value} mutate={mutate} onClose={closeEdit} />
+      )}
+      {edit?.type === 'price' && (
+        <PriceEditor
+          item={edit.value}
+          services={data.services}
+          mutate={mutate}
+          onClose={closeEdit}
+        />
       )}
       {edit?.type === 'service' && (
         <ServiceEditor service={edit.value} mutate={mutate} onClose={closeEdit} />

@@ -22,7 +22,7 @@ from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.oauth2 import id_token as google_id_token
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .db import INTEGRITY_ERRORS, ROOT, connect, dump, init_db, password_hash, services, settings, verify_password
+from .db import INTEGRITY_ERRORS, ROOT, connect, dump, init_db, password_hash, services, settings, verify_password, pages, pricing
 from .logic import ai_ready, calculate, deliver_mail, export_order, feedback_admin_message, feedback_customer_message, load_order, process_order, queue_mail, reply_no, workbook
 
 load_dotenv(ROOT / 'backend/.env')
@@ -58,7 +58,7 @@ async def protections(request, call_next):
                 return JSONResponse({'detail': 'Nội dung quá lớn.'}, status_code=413)
         except ValueError:
             return JSONResponse({'detail': 'Yêu cầu không hợp lệ.'}, status_code=400)
-        if request.url.path in ('/api/auth/login', '/api/auth/register', '/api/auth/otp/verify', '/api/auth/otp/resend', '/api/chat/send', '/api/orders', '/api/feedback'):
+        if request.url.path in ('/api/auth/login', '/api/auth/register', '/api/auth/otp/verify', '/api/auth/otp/resend', '/api/chat/send', '/api/orders', '/api/feedback', '/api/contact'):
             key = (request.client.host if request.client else 'local', request.url.path)
             now = time.time()
             with rate_lock:
@@ -132,7 +132,7 @@ def health(): return {'status': 'ok'}
 def bootstrap():
     with connect() as c:
         blogs = [dict(r) for r in c.execute('SELECT * FROM blogs WHERE published=1 ORDER BY created DESC')]
-    return {'services': services(True), 'settings': settings(), 'blogs': blogs, 'admin_online': admin_online(), 'ai_ready': ai_ready()}
+    return {'services': services(True), 'settings': settings(), 'blogs': blogs, 'pages': pages(), 'pricing': pricing(), 'admin_online': admin_online(), 'ai_ready': ai_ready()}
 
 @app.get('/api/auth/me')
 def me(person=Depends(identity)): return {'user': person['user']}
@@ -479,6 +479,33 @@ def my_feedback(person=Depends(identity)):
     with connect() as c:
         return [{**dict(r), 'data': json.loads(r['data'])} for r in c.execute('SELECT * FROM feedback WHERE owner=? ORDER BY created DESC', (person['owner'],))]
 
+
+class ContactInput(StrictModel):
+    name: str = Field(min_length=2, max_length=100)
+    phone: str = Field(pattern=r'^(\+84|0)[0-9 .-]{8,13}$')
+    email: str = Field(pattern=r'^[^\s@]+@[^\s@]+\.[^\s@]+$', max_length=200)
+    subject: str = Field(min_length=5, max_length=200)
+    content: str = Field(min_length=10, max_length=5000)
+    consent: Literal[True]
+    request_id: str = Field(min_length=10, max_length=80, pattern=r'^[a-zA-Z0-9-]+$')
+
+
+@app.post('/api/contact')
+def contact(data: ContactInput, tasks: BackgroundTasks, person=Depends(identity)):
+    identifier = 'LH-' + data.request_id
+    payload = {**data.model_dump(exclude={'request_id'}), 'category': 'Liên hệ tư vấn', 'rating': 0, 'order_id': '', 'transaction': ''}
+    with connect() as c:
+        existing = c.execute('SELECT owner FROM feedback WHERE id=?', (identifier,)).fetchone()
+        if existing:
+            ensure_owner(existing['owner'], person)
+            return {'id': identifier, 'mail_queued': True}
+        c.execute('INSERT INTO feedback(id,owner,data,created) VALUES(?,?,?,?)', (identifier, person['owner'], dump(payload), time.time()))
+    recipient = (os.getenv('FEEDBACK_ADMIN_EMAIL') or os.getenv('ADMIN_EMAIL') or settings()['email']).strip().lower()
+    subject, body = feedback_admin_message(identifier, payload)
+    mail_id = queue_mail('contact_admin', identifier, recipient, subject, body, reply_to=data.email)
+    tasks.add_task(deliver_mail, mail_id)
+    return {'id': identifier, 'mail_queued': True}
+
 def chat_for(person):
     with connect() as c:
         chat = c.execute('SELECT * FROM chats WHERE owner=? ORDER BY created DESC LIMIT 1', (person['owner'],)).fetchone()
@@ -528,7 +555,7 @@ def dashboard(person=Depends(admin)):
         users = [dict(r) for r in c.execute('SELECT id,name,email,role,active,created FROM users ORDER BY created DESC')]
         blogs = [dict(r) for r in c.execute('SELECT * FROM blogs ORDER BY created DESC')]
         outbox = [dict(r) for r in c.execute('SELECT * FROM outbox ORDER BY created DESC')]
-    return {'orders': all_orders, 'chats': chats, 'feedback': feedbacks, 'users': users, 'services': services(), 'blogs': blogs, 'settings': settings(), 'outbox': outbox, 'integrations': {'ai': ai_ready(), 'smtp': bool(os.getenv('SMTP_HOST') and os.getenv('SMTP_FROM'))}}
+    return {'orders': all_orders, 'chats': chats, 'feedback': feedbacks, 'users': users, 'services': services(), 'blogs': blogs, 'pages': pages(False), 'pricing': pricing(False), 'settings': settings(), 'outbox': outbox, 'integrations': {'ai': ai_ready(), 'smtp': bool(os.getenv('SMTP_HOST') and os.getenv('SMTP_FROM'))}}
 
 class StatusInput(StrictModel):
     status: Literal['new', 'surveying', 'confirmed', 'in_progress', 'completed', 'paid', 'cancelled']
@@ -674,6 +701,11 @@ class SettingsInput(StrictModel):
     bank_owner: str = Field(max_length=100)
     qr_image: str = Field(max_length=500)
     quote_note: str = Field(min_length=10, max_length=1000)
+    legal_name: str = Field(default='', max_length=200)
+    tax_code: str = Field(default='', max_length=30)
+    landline: str = Field(default='', max_length=30)
+    working_hours: str = Field(default='', max_length=300)
+    map_url: str = Field(default='https://maps.app.goo.gl/57dZpeMw67tToEGt7', pattern=r'^https://', max_length=500)
 
     @field_validator('qr_image')
     @classmethod
@@ -685,6 +717,65 @@ class SettingsInput(StrictModel):
 def save_settings(data: SettingsInput, person=Depends(admin)):
     with connect() as c: c.execute('UPDATE settings SET data=? WHERE id=1', (dump(data.model_dump()),))
     return {'ok': True}
+
+class PageInput(BaseModel):
+    model_config = ConfigDict(extra='ignore', str_strip_whitespace=True)
+
+    title: str = Field(min_length=5, max_length=180)
+    nav_title: str = Field(min_length=2, max_length=80)
+    excerpt: str = Field(min_length=5, max_length=500)
+    body: str = Field(min_length=20, max_length=20000)
+    image: str = Field(max_length=500)
+    source_url: str = Field(default='', max_length=500)
+    published: bool
+
+    @field_validator('image', 'source_url')
+    @classmethod
+    def safe_url(cls, value):
+        if value and not (value.startswith('https://') or (value.startswith('/images/') and '..' not in value)):
+            raise ValueError('Dùng đường dẫn HTTPS hoặc /images/.')
+        return value
+
+
+@app.put('/api/admin/pages/{identifier}')
+def save_page(identifier: str, data: PageInput, person=Depends(admin)):
+    with connect() as c:
+        row = c.execute('SELECT data FROM site_content WHERE id=?', (identifier,)).fetchone()
+        if not row:
+            raise HTTPException(404, 'Không tìm thấy trang.')
+        page_dict = json.loads(row['data'])
+        page_dict.update(data.model_dump())
+        c.execute('UPDATE site_content SET data=? WHERE id=?', (dump(page_dict), identifier))
+    return {'ok': True}
+
+
+
+class PricingInput(StrictModel):
+    name: str = Field(min_length=3, max_length=200)
+    group: str = Field(min_length=3, max_length=150)
+    service_id: str = Field(max_length=80)
+    subtype: str = Field(max_length=200)
+    unit: str = Field(min_length=1, max_length=50)
+    min_rate: int = Field(ge=0, le=100000000)
+    max_rate: int = Field(ge=0, le=100000000)
+    note: str = Field(max_length=1000)
+    survey_only: bool
+    active: bool
+
+
+@app.put('/api/admin/pricing/{identifier}')
+def save_pricing(identifier: str, data: PricingInput, person=Depends(admin)):
+    if not re.fullmatch(r'[a-zA-Z0-9-]{1,80}', identifier):
+        raise HTTPException(422, 'Mã hạng mục không hợp lệ.')
+    service = next((s for s in services() if s['id'] == data.service_id), None)
+    if not service or data.subtype not in service['subservices'] or data.max_rate < data.min_rate:
+        raise HTTPException(422, 'Kiểm tra loại dịch vụ và khoảng đơn giá từ–đến.')
+    if not data.survey_only and data.min_rate <= 0:
+        raise HTTPException(422, 'Hạng mục tính giá cần đơn giá lớn hơn 0.')
+    with connect() as c:
+        c.execute('INSERT INTO price_items VALUES(?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data', (identifier, dump({'id': identifier, **data.model_dump()})))
+    return {'ok': True}
+
 
 @app.post('/api/admin/outbox/{identifier}/retry')
 def retry(identifier: str, tasks: BackgroundTasks, person=Depends(admin)):

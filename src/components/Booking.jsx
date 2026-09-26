@@ -4,6 +4,7 @@ import { ErrorNotice, Field, Icon, Modal } from './ui';
 
 export function QuoteTable({ quote }) {
   if (!quote) return null;
+  const amount = (low, high) => (quote.range ? `${money(low)} – ${money(high)}` : money(low));
   return (
     <div className="quote-details">
       {quote.survey ? (
@@ -16,20 +17,22 @@ export function QuoteTable({ quote }) {
                 <span>
                   {l.name}
                   <small>
-                    {l.quantity} {l.unit} × {money(l.rate)}
+                    {l.quantity} {l.unit} × {amount(l.rate, l.rate_max)}
                   </small>
                 </span>
-                <b>{money(l.amount)}</b>
+                <b>{amount(l.amount, l.amount_max)}</b>
               </div>
             ))}
           </div>
           <div className="quote-tax">
             <span>Thuế cấu hình ({quote.tax_percent}%)</span>
-            <b>{money(quote.tax)}</b>
+            <b>{amount(quote.tax, quote.tax_max)}</b>
           </div>
           <div className="quote-total">
             <span>{quote.confirmed ? 'Tổng đã xác nhận' : 'Tổng tham khảo'}</span>
-            <strong>{money(quote.total)}</strong>
+            <strong className={quote.range ? 'range-value' : ''}>
+              {amount(quote.total, quote.total_max)}
+            </strong>
           </div>
         </>
       )}
@@ -43,6 +46,8 @@ export default function Booking({
   initialService,
   initialMode,
   initialSubtype,
+  pricing = [],
+  initialPricing,
   user,
   onClose,
   onSuccess,
@@ -53,6 +58,35 @@ export default function Booking({
   const [subtype, setSubtype] = useState(initialSubtype || service?.subservices[0]);
   const previousService = useRef(serviceId);
   const [details, setDetails] = useState({});
+  const [pricingId, setPricingId] = useState(initialPricing || '');
+  const priceItem = pricing.find(
+    (p) => p.id === pricingId && p.service_id === serviceId && p.subtype === subtype,
+  );
+  const priceOptions = pricing.filter((p) => p.service_id === serviceId && p.subtype === subtype);
+  const payloadDetails = { ...details, ...(priceItem ? { pricing_id: priceItem.id } : {}) };
+  const fields = priceItem
+    ? [
+        {
+          key: 'quantity',
+          label: `Khối lượng (${priceItem.unit})`,
+          type: 'number',
+          required: true,
+          min: priceItem.unit === 'kg' || priceItem.unit === 'm²' ? 0.01 : 1,
+          max: 100000,
+          step: ['cái', 'bộ', 'tấm', 'chuyến', 'người/tháng'].includes(priceItem.unit) ? 1 : 'any',
+        },
+        ...(serviceId === 'moving'
+          ? service.fields
+          : [
+              {
+                key: 'condition',
+                label: 'Hiện trạng / nhu cầu bổ sung',
+                type: 'text',
+                required: true,
+              },
+            ]),
+      ]
+    : service?.fields;
   const [customer, setCustomer] = useState({
     name: user?.name || '',
     phone: '',
@@ -73,12 +107,13 @@ export default function Booking({
     previousService.current = serviceId;
     setSubtype(service?.subservices[0]);
     setDetails({});
+    setPricingId('');
     setQuote(null);
     setPreviewError('');
   }, [serviceId]);
   useEffect(() => {
     setQuote(null);
-  }, [mode, details, subtype]);
+  }, [mode, details, subtype, pricingId]);
   const input = (key, value) => setCustomer((c) => ({ ...c, [key]: value }));
   async function preview(e) {
     e.preventDefault();
@@ -88,7 +123,7 @@ export default function Booking({
       setQuote(
         await api('/quotes/preview', {
           method: 'POST',
-          body: { service_id: serviceId, subtype, details, mode },
+          body: { service_id: serviceId, subtype, details: payloadDetails, mode },
         }),
       );
       setStep(2);
@@ -109,7 +144,7 @@ export default function Booking({
           service_id: serviceId,
           subtype,
           mode,
-          details,
+          details: payloadDetails,
           ...customer,
           consent,
           request_id: requestId,
@@ -177,6 +212,7 @@ export default function Booking({
                   <button
                     type="button"
                     className={mode === 'quote' ? 'selected' : ''}
+                    disabled={priceItem?.survey_only}
                     onClick={() => setMode('quote')}
                   >
                     <Icon name="file" />
@@ -203,15 +239,51 @@ export default function Booking({
                   </select>
                 </Field>
                 <Field label="Loại dịch vụ">
-                  <select value={subtype} onChange={(e) => setSubtype(e.target.value)}>
+                  <select
+                    value={subtype}
+                    onChange={(e) => {
+                      setSubtype(e.target.value);
+                      setPricingId('');
+                      setDetails({});
+                    }}
+                  >
                     {service?.subservices.map((s) => (
                       <option key={s}>{s}</option>
                     ))}
                   </select>
                 </Field>
+                {!!priceOptions.length && (
+                  <Field label="Hạng mục bảng giá">
+                    <select
+                      value={pricingId}
+                      onChange={(e) => {
+                        const item = pricing.find((p) => p.id === e.target.value);
+                        setPricingId(e.target.value);
+                        setDetails({});
+                        if (item?.survey_only) setMode('survey');
+                      }}
+                    >
+                      <option value="">Theo thông tin dịch vụ (đơn giá cấu hình)</option>
+                      {priceOptions.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} · {p.unit}
+                          {p.survey_only ? ' · Khảo sát' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+                {priceItem && (
+                  <p className="price-item-note">
+                    {priceItem.survey_only
+                      ? 'Cần khảo sát trước khi báo giá.'
+                      : `Khoảng đơn giá: ${money(priceItem.min_rate)} – ${money(priceItem.max_rate)} / ${priceItem.unit}.`}{' '}
+                    {priceItem.note}
+                  </p>
+                )}
                 {mode === 'quote' ? (
                   <div className="form-grid">
-                    {service?.fields.map((f) => (
+                    {fields?.map((f) => (
                       <Field key={f.key} label={f.label} required={f.required}>
                         {f.type === 'select' ? (
                           <select
@@ -230,7 +302,7 @@ export default function Booking({
                             required={f.required}
                             min={f.min}
                             max={f.max}
-                            step={f.type === 'number' ? 'any' : undefined}
+                            step={f.type === 'number' ? f.step || 'any' : undefined}
                             maxLength={3000}
                             value={details[f.key] ?? ''}
                             placeholder={f.type === 'number' ? 'Nhập số lượng' : 'Nhập thông tin'}

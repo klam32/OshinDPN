@@ -15,7 +15,7 @@ WORKDIR /app
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 COPY backend ./backend
-COPY src/data/catalog.json ./src/data/catalog.json
+COPY src/data ./src/data
 COPY --from=frontend /app/dist ./dist
 RUN mkdir -p /app/backend/data
 EXPOSE 8000

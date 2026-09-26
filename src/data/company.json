@@ -1,0 +1,199 @@
+{
+  "contact": {
+    "legal_name": "Công ty TNHH dịch vụ Oshin thời đại - Đất Phương Nam",
+    "tax_code": "1801817236",
+    "address": "L02 - 54 KV5 đường số 53, Khu dân cư Ngân Thuận, Phường Bình Thủy, TP Cần Thơ",
+    "landline": "0292 3893 577",
+    "working_hours": "Thứ Hai – Thứ Sáu: 08:00 – 18:00; Thứ Bảy – Chủ nhật: 08:00 – 17:00",
+    "map_url": "https://maps.app.goo.gl/57dZpeMw67tToEGt7"
+  },
+  "categories": [
+    "Tin mới",
+    "Kỹ năng",
+    "Kinh nghiệm",
+    "Mẹo vặt",
+    "Câu chuyện thương trường",
+    "Câu chuyện Cần Thơ"
+  ],
+  "pages": [
+    {
+      "id": "gioi-thieu",
+      "title": "Giới thiệu về Đất Phương Nam",
+      "nav_title": "Sơ lược",
+      "excerpt": "DỊCH VỤ CHUYÊN NGHIỆP – 20 NĂM KINH NGHIỆM TẠI ĐỒNG BẰNG SÔNG CỬU LONG. Năm 2004, khi dịch vụ vệ sinh công nghiệp còn khá mới mẻ tại Cần Thơ và khu vực miền Tây Nam Bộ, Đất Phương Nam đã mạnh dạn tiên phong bước vào thị trường, đặt những viên gạch đầu tiên cho ngành dịch vụ hiện đại này.",
+      "intro_image": "https://cdn.hstatic.net/themes/200001053360/1001393975/14/p-about-owl_item_1.jpg?v=348",
+      "highlights": [
+        { "icon": "shield", "title": "20+ năm kinh nghiệm", "desc": "Tiên phong ngành vệ sinh công nghiệp tại Cần Thơ và ĐBSCL từ năm 2004" },
+        { "icon": "users", "title": "2.000+ lao động", "desc": "Tạo việc làm ổn định cho hàng ngàn lao động phổ thông địa phương" },
+        { "icon": "sparkles", "title": "7 lĩnh vực dịch vụ", "desc": "Hệ sinh thái dịch vụ đa dạng, đáp ứng mọi nhu cầu gia đình và doanh nghiệp" },
+        { "icon": "home", "title": "Cần Thơ & ĐBSCL", "desc": "Phủ sóng dịch vụ rộng khắp đồng bằng sông Cửu Long" }
+      ],
+      "image": "/images/company.jpg",
+      "body": "Một đối tác cho nhiều nhu cầu\n\nKhởi đầu với vệ sinh công nghiệp, công ty từng bước phát triển các dịch vụ hỗ trợ đời sống và hoạt động doanh nghiệp. Kinh nghiệm thực tế cùng đội ngũ được đào tạo là nền tảng của quá trình phục vụ.\n\nHệ sinh thái dịch vụ\n\nCác lĩnh vực gồm vệ sinh công nghiệp, tạp vụ, cung ứng lao động, bảo trì công trình, kiểm soát côn trùng, vận chuyển – di dời và chăm sóc cảnh quan. Khách hàng có thể chọn từng hạng mục theo nhu cầu.\n\nĐồng hành từ tư vấn đến sau dịch vụ\n\nThông tin công việc được tiếp nhận để khảo sát, thống nhất phạm vi và báo giá. Trong suốt quá trình, khách hàng có thể trao đổi với nhân viên, theo dõi yêu cầu và gửi phản hồi.",
+      "source_url": "https://dichvudatphuongnam.net/pages/gioi-thieu-ve-dat-phuong-nam",
+      "published": true
+    },
+    {
+      "id": "tam-nhin-su-menh",
+      "title": "Tầm nhìn, sứ mệnh & giá trị cốt lõi",
+      "nav_title": "Tầm nhìn sứ mệnh",
+      "excerpt": "Đất Phương Nam hướng đến mục tiêu trở thành doanh nghiệp dịch vụ tích hợp hàng đầu tại khu vực Tây Nam Bộ, tiên phong ứng dụng công nghệ hiện đại và góp phần nâng cao chất lượng cuộc sống đô thị.",
+      "sections": [
+        {
+          "id": "vision",
+          "label": "I",
+          "title": "Tầm nhìn",
+          "image": "https://cdn.hstatic.net/200001053360/file/bomaycty_9d7a113d5cc0451a8edcd963656cb468_grande.png",
+          "paragraphs": [
+            "Đất Phương Nam hướng đến mục tiêu trở thành doanh nghiệp dịch vụ tích hợp hàng đầu tại khu vực Tây Nam Bộ, tiên phong trong việc ứng dụng công nghệ hiện đại, đổi mới mô hình hoạt động và tối ưu quy trình vận hành.",
+            "Chúng tôi khát khao xây dựng một thương hiệu dịch vụ uy tín – chuyên nghiệp – tận tâm, góp phần nâng cao chất lượng cuộc sống đô thị, tạo dựng môi trường sống xanh – sạch – an toàn, đồng thời thúc đẩy sự phát triển bền vững của cộng đồng và xã hội."
+          ]
+        },
+        {
+          "id": "mission",
+          "label": "II",
+          "title": "Sứ mệnh",
+          "paragraphs": [
+            "Với định hướng phát triển bền vững, Đất Phương Nam mang đến hệ sinh thái dịch vụ đa lĩnh vực – đa tiện ích, đáp ứng toàn diện nhu cầu của khách hàng từ cá nhân, hộ gia đình đến các tổ chức, doanh nghiệp.",
+            "Mục tiêu của chúng tôi là nâng tầm trải nghiệm khách hàng, tiêu chuẩn hóa chất lượng dịch vụ và khẳng định vị thế của Đất Phương Nam như một đối tác đáng tin cậy hàng đầu tại khu vực Tây Nam Bộ."
+          ],
+          "services": [
+            { "name": "Vệ sinh công nghiệp", "desc": "Vệ sinh sau xây dựng, tổng vệ sinh nhà ở, văn phòng, kho xưởng, vệ sinh kính cao tầng, giặt thảm, ghế nệm, rèm cửa." },
+            { "name": "Tạp vụ định kỳ – giúp việc theo giờ", "desc": "Tạp vụ nhà riêng, văn phòng theo lịch linh hoạt." },
+            { "name": "Dọn nhà – chuyển văn phòng – di dời trọn gói", "desc": "Nhanh chóng, an toàn, tiết kiệm thời gian." },
+            { "name": "Cung ứng lao động phổ thông – thời vụ – dài hạn", "desc": "Đáp ứng nhu cầu nhân sự đa dạng cho doanh nghiệp." },
+            { "name": "Bảo trì – sửa chữa công trình – trang trí nội/ngoại thất", "desc": "Dịch vụ toàn diện, thuận tiện, chất lượng." },
+            { "name": "Diệt côn trùng – khử trùng không gian", "desc": "Bảo vệ môi trường sống và sức khỏe cộng đồng." },
+            { "name": "Thiết kế sân vườn – chăm sóc cây cảnh", "desc": "Kiến tạo không gian xanh, nâng cao giá trị thẩm mỹ." }
+          ]
+        },
+        {
+          "id": "values",
+          "label": "III",
+          "title": "Giá trị cốt lõi",
+          "paragraphs": [
+            "Đất Phương Nam lấy chất lượng – an toàn – hiệu quả làm nền tảng cho mọi hoạt động. Chúng tôi tin rằng sự thành công bền vững phải được xây dựng từ uy tín, trách nhiệm và sự tận tâm phục vụ."
+          ],
+          "points": [
+            { "num": "01", "title": "Chất lượng", "desc": "Cam kết mang đến những dịch vụ hoàn thiện, đáp ứng tiêu chuẩn cao nhất về kỹ thuật, thẩm mỹ và độ tin cậy." },
+            { "num": "02", "title": "An toàn", "desc": "Tuân thủ nghiêm ngặt quy trình bảo hộ lao động, an toàn môi trường và sức khỏe cho nhân viên cũng như khách hàng." },
+            { "num": "03", "title": "Hiệu quả", "desc": "Tối ưu hóa nguồn lực và thời gian, mang lại giá trị thiết thực, tiết kiệm và lâu dài cho đối tác." },
+            { "num": "04", "title": "Trí tuệ & Sáng tạo", "desc": "Không ngừng đổi mới công nghệ, cải tiến phương pháp làm việc, khuyến khích tinh thần học hỏi và tư duy đột phá." },
+            { "num": "05", "title": "Trách nhiệm & Tận tâm", "desc": "Luôn lấy sự hài lòng của khách hàng và lợi ích cộng đồng làm thước đo cho mọi hành động." }
+          ]
+        }
+      ],
+      "image": "/images/service-1.jpg",
+      "body": "Tầm nhìn\n\nĐất Phương Nam hướng tới vị thế doanh nghiệp dịch vụ tích hợp hàng đầu Tây Nam Bộ. Công nghệ và cải tiến vận hành hỗ trợ xây dựng môi trường sống, làm việc xanh, sạch và an toàn.\n\nSứ mệnh\n\nCung cấp hệ sinh thái dịch vụ cho cá nhân, gia đình và tổ chức; chuẩn hóa chất lượng phục vụ và giúp khách hàng thuận tiện hơn trong việc chăm sóc không gian, quản lý nhân lực và vận hành công trình.\n\nGiá trị cốt lõi\n\nChất lượng, an toàn và hiệu quả là nền tảng. Trí tuệ, sáng tạo, trách nhiệm và sự tận tâm định hướng cách công ty làm việc với khách hàng, người lao động và cộng đồng.\n\nĐịnh hướng thực hiện\n\nLắng nghe nhu cầu, lựa chọn phương án phù hợp, sử dụng nguồn lực hiệu quả và tiếp nhận phản hồi để cải tiến dịch vụ.",
+      "source_url": "https://dichvudatphuongnam.net/pages/tam-nhin-su-menh",
+      "published": true
+    },
+    {
+      "id": "lich-su-hinh-thanh",
+      "title": "Lịch sử hình thành",
+      "nav_title": "Lịch sử hình thành",
+      "excerpt": "Giữ gìn môi trường sống và làm việc trong lành không chỉ là nhu cầu mà còn là tiêu chuẩn của một cuộc sống hiện đại. Suốt hơn 20 năm đồng hành cùng khách hàng, Oshin Thời Đại – Đất Phương Nam đã khẳng định vị thế đơn vị tiên phong trong lĩnh vực vệ sinh công nghiệp tại miền Tây, mang đến các giải pháp làm sạch toàn diện, đáp ứng nhu cầu của cá nhân, doanh nghiệp và cộng đồng.",
+      "image": "/images/company.jpg",
+      "hero_image": "https://cdn.hstatic.net/200001053360/file/anh-hieu-doanh-nhan-vn-tieu-bieu-2016_ef245b6363f74c45b7324f86464367f8_grande.jpg",
+      "community_image": "https://cdn.hstatic.net/200001053360/file/khachhangtieubieu_642cb7148f264bdd8bb19fb8d9121277_grande.jpg",
+      "sections": [
+        {
+          "id": "journey",
+          "label": "I",
+          "title": "Hành trình 20 năm kiến tạo giá trị và dẫn đầu ngành vệ sinh công nghiệp",
+          "paragraphs": [
+            "Năm 2004, khi dịch vụ vệ sinh công nghiệp còn khá mới mẻ tại Cần Thơ và khu vực miền Tây Nam Bộ, Đất Phương Nam đã mạnh dạn tiên phong bước vào thị trường, đặt những viên gạch đầu tiên cho ngành dịch vụ hiện đại này.",
+            "Từ những ngày đầu còn nhiều khó khăn, công ty từng bước khẳng định vị thế bằng tầm nhìn dài hạn, chiến lược đúng đắn và sự tận tâm trong phục vụ. Trải qua hơn hai thập kỷ, chúng tôi đã phát triển thành đơn vị hàng đầu trong lĩnh vực vệ sinh công nghiệp, không ngừng nâng cao chất lượng dịch vụ, mở rộng quy mô và ứng dụng công nghệ hiện đại để mang đến trải nghiệm chuyên nghiệp và hiệu quả cho khách hàng."
+          ],
+          "image": "https://cdn.hstatic.net/200001053360/file/anh-hieu-doanh-nhan-vn-tieu-bieu-2016_ef245b6363f74c45b7324f86464367f8_grande.jpg"
+        },
+        {
+          "id": "ecosystem",
+          "label": "II",
+          "title": "Hệ sinh thái dịch vụ toàn diện",
+          "paragraphs": [
+            "Với định hướng trở thành nhà cung cấp giải pháp đa dịch vụ, Đất Phương Nam mang đến một hệ sinh thái dịch vụ đa dạng, phù hợp với nhiều nhu cầu từ gia đình đến doanh nghiệp.",
+            "Tất cả dịch vụ đều được triển khai theo quy trình chuẩn hóa, kết hợp đội ngũ nhân sự giàu kinh nghiệm và trang thiết bị hiện đại, đảm bảo mang đến hiệu quả tối ưu trong từng dự án."
+          ],
+          "services": [
+            { "name": "Vệ sinh công nghiệp", "desc": "Vệ sinh định kỳ, tạp vụ theo giờ, giúp việc theo nhu cầu." },
+            { "name": "Vệ sinh sau xây dựng", "desc": "Làm sạch bụi mịn, vết sơn, xi măng, rác thải, bàn giao không gian hoàn thiện." },
+            { "name": "Giặt ghế sofa, nệm, rèm, thảm", "desc": "Diệt khuẩn, khử mùi và phục hồi tính thẩm mỹ." },
+            { "name": "Lau kính tòa nhà cao tầng", "desc": "Đội ngũ chuyên nghiệp, trang bị bảo hộ đầy đủ, đảm bảo an toàn tuyệt đối." },
+            { "name": "Vệ sinh tấm pin năng lượng mặt trời", "desc": "Tối ưu hiệu suất, kéo dài tuổi thọ thiết bị." },
+            { "name": "Diệt côn trùng và khử trùng không gian", "desc": "Bảo vệ môi trường sống và sức khỏe." },
+            { "name": "Dọn nhà và chuyển văn phòng trọn gói", "desc": "Nhanh chóng, an toàn, tiết kiệm thời gian." },
+            { "name": "Cung ứng lao động phổ thông, thời vụ và dài hạn", "desc": "Đáp ứng nhu cầu nhân sự đa dạng cho doanh nghiệp." },
+            { "name": "Bảo trì, sửa chữa công trình, trang trí nội – ngoại thất", "desc": "Dịch vụ toàn diện, thuận tiện, chất lượng." },
+            { "name": "Thiết kế sân vườn, chăm sóc cây cảnh", "desc": "Kiến tạo không gian xanh, nâng cao giá trị thẩm mỹ." }
+          ]
+        },
+        {
+          "id": "partner",
+          "label": "III",
+          "title": "Đất Phương Nam – Đối tác đáng tin cậy dành cho mọi doanh nghiệp",
+          "image": "https://cdn.hstatic.net/200001053360/file/khachhangtieubieu_642cb7148f264bdd8bb19fb8d9121277_grande.jpg",
+          "points": [
+            { "num": "3.1", "title": "Tiên phong từ năm 2004", "desc": "Đất Phương Nam là đơn vị tiên phong đặt nền móng cho dịch vụ vệ sinh công nghiệp tại miền Tây, khai phá thị trường còn non trẻ và xây dựng chuẩn mực chuyên nghiệp cho ngành. Trong hơn 20 năm hoạt động, công ty đã không ngừng mở rộng quy mô, nâng cao chất lượng dịch vụ và khẳng định vị thế dẫn đầu tại Cần Thơ." },
+            { "num": "3.2", "title": "Dịch vụ trọn gói và chuyên nghiệp", "desc": "Các dịch vụ của Đất Phương Nam được triển khai theo quy trình chuẩn, từ khảo sát, tư vấn, thực hiện đến kiểm tra sau dịch vụ, đảm bảo chất lượng đồng nhất và hiệu quả tối ưu." },
+            { "num": "3.3", "title": "Đội ngũ nhân sự được đào tạo bài bản", "desc": "Nhân viên của Đất Phương Nam được đào tạo chuyên sâu, sở hữu tác phong chuẩn mực và kỹ năng thành thạo trong mọi công việc." },
+            { "num": "3.4", "title": "Minh bạch chi phí", "desc": "Mọi dịch vụ đều đi kèm báo giá rõ ràng và hợp đồng chặt chẽ, đảm bảo không phát sinh chi phí ngoài cam kết. Khách hàng hoàn toàn chủ động trong việc quản lý ngân sách." },
+            { "num": "3.5", "title": "Trang thiết bị và hóa chất hiện đại", "desc": "Đất Phương Nam áp dụng các trang thiết bị tiên tiến cùng hóa chất an toàn, thân thiện với môi trường trong mọi hạng mục vệ sinh. Thiết bị hiện đại không chỉ nâng cao hiệu quả công việc mà còn bảo vệ sức khỏe người sử dụng." },
+            { "num": "3.6", "title": "Cam kết hài lòng", "desc": "Chúng tôi luôn đặt sự hài lòng của khách hàng làm ưu tiên hàng đầu, đảm bảo mọi nhu cầu được đáp ứng kịp thời. Chính sách bảo hành dịch vụ và hỗ trợ sau triển khai giúp khách hàng hoàn toàn yên tâm về chất lượng." }
+          ]
+        },
+        {
+          "id": "community",
+          "label": "IV",
+          "title": "Giá trị cộng đồng – Hành trình vì xã hội bền vững",
+          "paragraphs": [
+            "Đất Phương Nam tự hào đóng góp vào sự phát triển bền vững của cộng đồng:"
+          ],
+          "stats": [
+            { "value": "2.000+", "label": "Lao động phổ thông tại miền Tây được tạo việc làm" },
+            { "value": "20+", "label": "Năm đồng hành cùng gia đình và doanh nghiệp" },
+            { "value": "Hàng trăm", "label": "Hộ gia đình có nguồn thu nhập ổn định" }
+          ],
+          "quote": "\"Sạch từng chi tiết – Chuẩn từng quy trình – Phục vụ bằng cả trái tim.\""
+        }
+      ],
+      "body": "Giữ gìn môi trường sống và làm việc trong lành không chỉ là nhu cầu mà còn là tiêu chuẩn của một cuộc sống hiện đại.\n\nNăm 2004, khi dịch vụ vệ sinh công nghiệp còn khá mới mẻ tại Cần Thơ và khu vực miền Tây Nam Bộ, Đất Phương Nam đã mạnh dạn tiên phong bước vào thị trường, đặt những viên gạch đầu tiên cho ngành dịch vụ hiện đại này.\n\nTừ những ngày đầu còn nhiều khó khăn, công ty từng bước khẳng định vị thế bằng tầm nhìn dài hạn, chiến lược đúng đắn và sự tận tâm trong phục vụ. Trải qua hơn hai thập kỷ, chúng tôi đã phát triển thành đơn vị hàng đầu trong lĩnh vực vệ sinh công nghiệp.\n\nVới định hướng trở thành nhà cung cấp giải pháp đa dịch vụ, Đất Phương Nam mang đến hệ sinh thái dịch vụ đa dạng gồm: Vệ sinh công nghiệp, vệ sinh sau xây dựng, giặt ghế sofa/nệm/rèm/thảm, lau kính tòa nhà cao tầng, vệ sinh tấm pin năng lượng mặt trời, diệt côn trùng, chuyển văn phòng, cung ứng lao động, bảo trì công trình và thiết kế sân vườn.\n\nĐất Phương Nam tự hào đã tạo việc làm cho hơn 2.000 lao động phổ thông tại miền Tây, giúp hàng trăm hộ gia đình có nguồn thu nhập ổn định.",
+      "source_url": "https://dichvudatphuongnam.net/pages/lich-su-hinh-thanh",
+      "published": true
+    },
+    {
+      "id": "hanh-trinh-phat-trien",
+      "title": "Hành trình phát triển",
+      "nav_title": "Hành trình phát triển",
+      "excerpt": "Hơn 20 năm hình thành và phát triển – từ tiên phong vệ sinh công nghiệp năm 2004 đến mở rộng hệ sinh thái đa dịch vụ và ứng dụng công nghệ hiện đại phục vụ khách hàng Cần Thơ và miền Tây.",
+      "timeline": [
+        {
+          "year": "2004",
+          "title": "Tiên phong khởi đầu tại Cần Thơ",
+          "desc": "Đất Phương Nam bước vào lĩnh vực vệ sinh công nghiệp khi dịch vụ này còn mới mẻ tại địa phương. Với tầm nhìn dài hạn và tinh thần tiên phong, công ty đặt nền tảng ban đầu cho hoạt động hỗ trợ gia đình và doanh nghiệp tại Cần Thơ và miền Tây Nam Bộ.",
+          "milestone": true
+        },
+        {
+          "year": "2010+",
+          "title": "Mở rộng hệ sinh thái dịch vụ",
+          "desc": "Từ hoạt động làm sạch ban đầu, công ty từng bước mở rộng sang tạp vụ, vận chuyển – di dời, cung ứng nhân lực, bảo trì công trình, kiểm soát côn trùng và chăm sóc cảnh quan. Đội ngũ và thiết bị được phát triển song song với nhu cầu thực tế của khách hàng."
+        },
+        {
+          "year": "2020+",
+          "title": "Đổi mới cách phục vụ – Ứng dụng công nghệ",
+          "desc": "Đất Phương Nam định hướng ứng dụng đặt dịch vụ trực tuyến, theo dõi tiến độ và quản lý khách hàng. OshinDPN hỗ trợ tiếp nhận nhu cầu, lập chiết tính và kết nối khách hàng với đội ngũ tư vấn. Chatbot Nở được tích hợp để tư vấn 24/7."
+        },
+        {
+          "year": "Hôm nay",
+          "title": "Con người và cộng đồng – Hành trình tiếp diễn",
+          "desc": "Phát triển kỹ năng, tạo việc làm và nâng cao thu nhập cho lao động địa phương là một phần trong định hướng phát triển của công ty. Thông tin khảo sát, phản hồi sau dịch vụ và yêu cầu hỗ trợ giúp đội ngũ điều chỉnh phương án phục vụ phù hợp hơn với từng khách hàng.",
+          "milestone": true
+        }
+      ],
+      "image": "/images/service-3.jpg",
+      "body": "Từ dịch vụ chuyên môn đến giải pháp tích hợp\n\nTrên nền tảng hoạt động từ năm 2004, công ty phát triển nhiều lĩnh vực để đáp ứng công việc trong gia đình, văn phòng và sản xuất.\n\nĐổi mới cách phục vụ\n\nWebsite chính nêu định hướng ứng dụng đặt dịch vụ trực tuyến, theo dõi tiến độ, quản lý khách hàng và trí tuệ nhân tạo trong công việc. OshinDPN hỗ trợ tiếp nhận nhu cầu, lập chiết tính và kết nối khách hàng với đội ngũ tư vấn.\n\nCon người và cộng đồng\n\nPhát triển kỹ năng, tạo việc làm và nâng cao thu nhập cho lao động địa phương là một phần trong định hướng phát triển của công ty.\n\nTiếp tục lắng nghe\n\nThông tin khảo sát, phản hồi sau dịch vụ và yêu cầu hỗ trợ giúp đội ngũ điều chỉnh phương án phục vụ phù hợp hơn với từng khách hàng.",
+      "source_url": "https://dichvudatphuongnam.net/pages/hanh-trinh-phat-trien",
+      "published": true
+    }
+  ]
+}

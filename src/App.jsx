@@ -1,7 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import catalog from './data/catalog.json';
+import company from './data/company.json';
+import priceSeed from './data/pricing.json';
+import newsSeed from './data/news.json';
+import {
+  ArticlePage,
+  CompanyPage,
+  ContactPage,
+  HistoryPage,
+  JourneyPage,
+  NewsPage,
+  NotFoundPage,
+  PricingPage,
+  VisionPage,
+  blogHref,
+} from './components/Pages';
+
 import { api } from './lib/api';
-import { Icon, Logo, Modal } from './components/ui';
+import { Icon, Logo } from './components/ui';
 import Booking from './components/Booking';
 import { Account, Auth, Chat, Feedback } from './components/Customer';
 import Admin from './components/Admin';
@@ -9,17 +25,24 @@ import Home from './components/Home';
 import Header from './components/Header';
 
 const fallbackSettings = {
+  ...company.contact,
   company_name: 'Oshin Thời Đại – Đất Phương Nam',
   hotline: '0901 040 484',
   email: 'thanhlan.datphuongnam@gmail.com',
-  address: 'Cần Thơ và Đồng bằng sông Cửu Long',
+  address: company.contact.address,
   hero_title: 'Nhà sạch thảnh thơi.\nCuộc sống rạng ngời.',
   hero_description:
     'Từ tổ ấm đến nơi làm việc, Đất Phương Nam chăm chút từng không gian để bạn an tâm dành thời gian cho những điều yêu thương.',
 };
 
 export default function App() {
-  const [data, setData] = useState({ services: catalog, settings: fallbackSettings, blogs: [] }),
+  const [data, setData] = useState({
+      services: catalog,
+      settings: fallbackSettings,
+      blogs: newsSeed,
+      pages: company.pages,
+      pricing: priceSeed,
+    }),
     [user, setUser] = useState(null),
     [ready, setReady] = useState(false),
     [offline, setOffline] = useState(false);
@@ -28,7 +51,6 @@ export default function App() {
     [auth, setAuth] = useState(false),
     [feedback, setFeedback] = useState(false),
     [chatOpen, setChatOpen] = useState(false),
-    [blog, setBlog] = useState(null),
     [toast, setToast] = useState('');
   const refresh = useCallback(async () => {
     try {
@@ -59,9 +81,26 @@ export default function App() {
   }, [toast]);
   const closeBooking = useCallback(() => setBooking(null), []),
     closeAuth = useCallback(() => setAuth(false), []),
-    closeFeedback = useCallback(() => setFeedback(false), []),
-    closeBlog = useCallback(() => setBlog(null), []);
-  const openBooking = (service, mode = 'quote', subtype) => setBooking({ service, mode, subtype });
+    closeFeedback = useCallback(() => setFeedback(false), []);
+  const openBooking = (service, mode = 'quote', subtype, pricingId) =>
+    setBooking({ service, mode, subtype, pricingId });
+  const openBlog = (article) => {
+    location.hash = blogHref(article.id);
+  };
+  const [path, query = ''] = route.replace(/^#\/?/, '').split('?');
+  const contentPage = data.pages?.find((p) => p.id === path);
+  const article = path.startsWith('bai-viet/')
+    ? data.blogs.find((b) => blogHref(b.id) === route)
+    : null;
+  useEffect(() => {
+    document.title = `${contentPage?.title || article?.title || { 'lien-he': 'Liên hệ', 'tin-tuc': 'Tin tức', 'bang-gia': 'Bảng giá & chiết tính' }[path] || 'Dịch vụ'} | Oshin Thời Đại – Đất Phương Nam`;
+    const frame = requestAnimationFrame(() => {
+      const target = document.getElementById(path);
+      if (target && !route.startsWith('#/')) target.scrollIntoView();
+      else window.scrollTo(0, 0);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [route, contentPage?.title, article?.title]);
   const loggedIn = (u) => {
     setUser(u);
     setToast(`Chào mừng ${u.name}!`);
@@ -87,13 +126,14 @@ export default function App() {
           <Header
             services={data.services}
             blogs={data.blogs}
+            pages={data.pages || []}
             settings={data.settings}
             user={user}
             route={route}
             onBooking={openBooking}
             onAuth={() => setAuth(true)}
             onLogout={logout}
-            onBlog={setBlog}
+            onBlog={openBlog}
           />
           {offline && (
             <div className="connection-notice">
@@ -123,12 +163,65 @@ export default function App() {
                 Đăng nhập
               </button>
             </main>
+          ) : contentPage?.id === 'lich-su-hinh-thanh' ? (
+            <HistoryPage
+              page={contentPage}
+              data={data}
+              openBooking={openBooking}
+              openChat={() => setChatOpen(true)}
+            />
+          ) : contentPage?.id === 'tam-nhin-su-menh' ? (
+            <VisionPage
+              page={contentPage}
+              data={data}
+              openBooking={openBooking}
+              openChat={() => setChatOpen(true)}
+            />
+          ) : contentPage?.id === 'hanh-trinh-phat-trien' ? (
+            <JourneyPage
+              page={contentPage}
+              data={data}
+              openBooking={openBooking}
+              openChat={() => setChatOpen(true)}
+            />
+          ) : contentPage ? (
+            <CompanyPage
+              page={contentPage}
+              data={data}
+              openBooking={openBooking}
+              openChat={() => setChatOpen(true)}
+            />
+          ) : path === 'lien-he' ? (
+            <ContactPage
+              key={user?.id || 'guest'}
+              settings={data.settings}
+              user={user}
+              openChat={() => setChatOpen(true)}
+              openBooking={openBooking}
+            />
+          ) : path === 'bang-gia' ? (
+            <PricingPage
+              pricing={data.pricing || []}
+              services={data.services}
+              settings={data.settings}
+              openBooking={openBooking}
+            />
+          ) : path === 'tin-tuc' ? (
+            <NewsPage
+              key={query}
+              blogs={data.blogs}
+              category={new URLSearchParams(query).get('chuyen-muc') || ''}
+            />
+          ) : article ? (
+            <ArticlePage article={article} blogs={data.blogs} openBooking={openBooking} />
+          ) : route.startsWith('#/') ? (
+            <NotFoundPage />
           ) : (
             <Home
               data={data}
               openBooking={openBooking}
               openChat={() => setChatOpen(true)}
-              openBlog={setBlog}
+              openBlog={openBlog}
             />
           )}
           <footer className="site-footer" id="contact">
@@ -136,9 +229,8 @@ export default function App() {
               <div>
                 <Logo light />
                 <p>
-                  Chăm sóc tận tâm, để mỗi ngày
-                  <br />
-                  của bạn nhẹ nhàng hơn một chút.
+                  Dịch vụ cho gia đình và doanh nghiệp tại Cần Thơ, Đồng bằng sông Cửu Long. Đồng
+                  hành từ năm 2004.
                 </p>
                 <span className="footer-location">
                   <Icon name="pin" size={17} /> {data.settings.address}
@@ -146,15 +238,19 @@ export default function App() {
               </div>
               <div>
                 <h4>Khám phá</h4>
-                <a href="#about">Về Đất Phương Nam</a>
+                <a href="#/gioi-thieu">Về Đất Phương Nam</a>
+                <a href="#/lich-su-hinh-thanh">Lịch sử hình thành</a>
+                <a href="#/tam-nhin-su-menh">Tầm nhìn sứ mệnh</a>
                 <a href="#services">Dịch vụ của chúng tôi</a>
                 <a href="#process">Quy trình dịch vụ</a>
-                <a href="#blog">Góc chia sẻ</a>
+                <a href="#/tin-tuc">Tin tức & chia sẻ</a>
               </div>
               <div>
                 <h4>Chăm sóc khách hàng</h4>
                 <a href="#account">Yêu cầu của tôi</a>
                 <a href="#faq">Câu hỏi thường gặp</a>
+                <a href="#/bang-gia">Bảng giá & chiết tính</a>
+                <a href="#/lien-he">Gửi lời nhắn liên hệ</a>
                 <button onClick={() => setFeedback(true)}>Phản hồi & báo lỗi</button>
                 <button onClick={() => setChatOpen(true)}>Tư vấn cùng Nở</button>
               </div>
@@ -197,6 +293,8 @@ export default function App() {
           initialService={booking.service}
           initialMode={booking.mode}
           initialSubtype={booking.subtype}
+          pricing={data.pricing || []}
+          initialPricing={booking.pricingId}
           user={user}
           onClose={closeBooking}
           onSuccess={() => setToast('Yêu cầu đã được lưu thành công.')}
@@ -204,18 +302,6 @@ export default function App() {
       )}
       {auth && <Auth onClose={closeAuth} onAuth={loggedIn} />}
       {feedback && <Feedback user={user} onClose={closeFeedback} />}
-      {blog && (
-        <Modal wide title={blog.title} onClose={closeBlog}>
-          <article className="article-content">
-            <img src={blog.image} alt={blog.title} />
-            <span className="eyebrow">{blog.category}</span>
-            <p className="article-intro">{blog.excerpt}</p>
-            {blog.body.split('\n\n').map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </article>
-        </Modal>
-      )}
       {toast && (
         <div className="toast" role="status">
           <Icon name="check" size={18} />

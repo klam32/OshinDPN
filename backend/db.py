@@ -106,6 +106,9 @@ def init_db():
     CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), expires DOUBLE PRECISION NOT NULL, online INTEGER DEFAULT 0, heartbeat DOUBLE PRECISION DEFAULT 0);
     CREATE TABLE IF NOT EXISTS settings(id INTEGER PRIMARY KEY, data TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS services(id TEXT PRIMARY KEY, data TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS site_content(id TEXT PRIMARY KEY, data TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS price_items(id TEXT PRIMARY KEY, data TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS content_migrations(id TEXT PRIMARY KEY);
     CREATE TABLE IF NOT EXISTS blogs(id TEXT PRIMARY KEY, title TEXT NOT NULL, category TEXT NOT NULL, excerpt TEXT NOT NULL, body TEXT NOT NULL, image TEXT NOT NULL, published INTEGER DEFAULT 1, created DOUBLE PRECISION NOT NULL);
     CREATE TABLE IF NOT EXISTS orders(id TEXT PRIMARY KEY, owner TEXT NOT NULL, data TEXT NOT NULL, status TEXT NOT NULL, quote TEXT NOT NULL, summary TEXT NOT NULL DEFAULT '', created DOUBLE PRECISION NOT NULL);
     CREATE TABLE IF NOT EXISTS chats(id TEXT PRIMARY KEY, owner TEXT NOT NULL, mode TEXT NOT NULL DEFAULT 'ai', created DOUBLE PRECISION NOT NULL);
@@ -151,6 +154,34 @@ def init_db():
         for service in json.loads((ROOT / 'src/data/catalog.json').read_text(encoding='utf-8')):
             c.execute('INSERT INTO services VALUES(?,?) ON CONFLICT DO NOTHING', (service['id'], dump(service)))
         import time
+        if not c.execute("SELECT 1 FROM content_migrations WHERE id='company-content-v1'").fetchone():
+            company = json.loads((ROOT / 'src/data/company.json').read_text(encoding='utf-8'))
+            for page in company['pages']:
+                c.execute('INSERT INTO site_content VALUES(?,?) ON CONFLICT DO NOTHING', (page['id'], dump(page)))
+            for item in json.loads((ROOT / 'src/data/pricing.json').read_text(encoding='utf-8')):
+                c.execute('INSERT INTO price_items VALUES(?,?) ON CONFLICT DO NOTHING', (item['id'], dump(item)))
+            current = json.loads(c.execute('SELECT data FROM settings WHERE id=1').fetchone()['data'])
+            for key, value in company['contact'].items():
+                current.setdefault(key, value)
+            if current['address'] == 'Cần Thơ và Đồng bằng sông Cửu Long':
+                current['address'] = company['contact']['address']
+            c.execute('UPDATE settings SET data=? WHERE id=1', (dump(current),))
+            for article in json.loads((ROOT / 'src/data/news.json').read_text(encoding='utf-8')):
+                c.execute('INSERT INTO blogs VALUES(?,?,?,?,?,?,1,?) ON CONFLICT DO NOTHING', (article['id'], article['title'], article['category'], article['excerpt'], article['body'], article['image'], article['created']))
+            c.execute("INSERT INTO content_migrations VALUES('company-content-v1') ON CONFLICT DO NOTHING")
+        if not c.execute("SELECT 1 FROM content_migrations WHERE id='company-content-v2'").fetchone():
+            company = json.loads((ROOT / 'src/data/company.json').read_text(encoding='utf-8'))
+            for page in company['pages']:
+                row = c.execute('SELECT data FROM site_content WHERE id=?', (page['id'],)).fetchone()
+                if row:
+                    curr = json.loads(row['data'])
+                    for k in ('sections', 'timeline', 'highlights', 'intro_image', 'hero_image', 'community_image'):
+                        if k in page and k not in curr:
+                            curr[k] = page[k]
+                    c.execute('UPDATE site_content SET data=? WHERE id=?', (dump(curr), page['id']))
+                else:
+                    c.execute('INSERT INTO site_content VALUES(?,?) ON CONFLICT DO NOTHING', (page['id'], dump(page)))
+            c.execute("INSERT INTO content_migrations VALUES('company-content-v2') ON CONFLICT DO NOTHING")
         articles = [
             ('clean-home', 'Một ngôi nhà sạch bắt đầu từ những thói quen nhỏ', 'Mẹo chăm sóc nhà', 'Gợi ý sắp xếp lịch vệ sinh để tổ ấm luôn gọn gàng mà vẫn có thời gian cho bản thân.', 'Chia việc theo từng khu vực: bếp, phòng khách, phòng ngủ và nhà tắm. Ưu tiên lau các bề mặt sử dụng hằng ngày và thông gió khi dọn dẹp.\n\nVới những hạng mục cần thiết bị chuyên dụng, hãy mô tả diện tích, hiện trạng và thời gian mong muốn để đội ngũ tư vấn chuẩn bị phương án phù hợp.\n\nBạn có thể chọn dịch vụ vệ sinh hoặc đặt khảo sát ngay trên website.', '/images/hero.jpg'),
             ('moving-plan', 'Chuyển văn phòng: chuẩn bị gì để mọi việc nhẹ nhàng?', 'Kinh nghiệm dịch vụ', 'Một danh sách chuẩn bị đơn giản giúp quá trình đóng gói và di dời dễ theo dõi hơn.', 'Lập danh sách tài sản theo từng phòng, ghi rõ số lượng và đánh dấu đồ dễ vỡ. Sao lưu dữ liệu trước khi di chuyển thiết bị.\n\nCung cấp địa chỉ đi và đến, số tầng, tình trạng thang máy và khung giờ được vận chuyển. Những thông tin này giúp nhân viên xây dựng phương án và chiết tính chính xác hơn.', '/images/service-2.jpg'),
@@ -172,3 +203,18 @@ def services(active=False):
     with connect() as c:
         rows = [json.loads(r['data']) for r in c.execute('SELECT data FROM services')]
     return [s for s in rows if s['active']] if active else rows
+
+
+def pages(published=True):
+    with connect() as c:
+        rows = [json.loads(r['data']) for r in c.execute('SELECT data FROM site_content ORDER BY id')]
+    return [p for p in rows if p['published']] if published else rows
+
+
+def pricing(active=True):
+    with connect() as c:
+        rows = [json.loads(r['data']) for r in c.execute('SELECT data FROM price_items ORDER BY id')]
+    if not active:
+        return rows
+    available = {s['id']: s['subservices'] for s in services(True)}
+    return [p for p in rows if p['active'] and p['subtype'] in available.get(p['service_id'], [])]

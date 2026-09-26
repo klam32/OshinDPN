@@ -438,6 +438,11 @@ export function Chat({ open, setOpen, sessionKey }) {
               </button>
             </div>
           )}
+          <nav className="chat-shortcuts" aria-label="Liên kết hỗ trợ">
+            <a href="#/bang-gia" onClick={()=>setOpen(false)}>Bảng giá & chiết tính</a>
+            <a href="#/lien-he" onClick={()=>setOpen(false)}>Liên hệ</a>
+            <a href="#/gioi-thieu" onClick={()=>setOpen(false)}>Về công ty</a>
+          </nav>
           <div className="chat-messages" aria-live="polite">
             <div className="chat-date">Hỗ trợ từ Đất Phương Nam</div>
             <div className="message assistant">
