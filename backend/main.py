@@ -10,7 +10,7 @@ from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from threading import Lock
 from typing import Literal
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import httpx
 from dotenv import load_dotenv
@@ -290,8 +290,11 @@ def google_config():
 
 
 @app.get('/api/auth/google/start')
-def google_start(person=Depends(identity)):
+def google_start(request: Request, person=Depends(identity)):
     config = google_config()
+    canonical = urlparse(config['frontend_url'])
+    if canonical.netloc and request.url.netloc != canonical.netloc:
+        return RedirectResponse(f"{config['frontend_url']}/api/auth/google/start", status_code=302)
     now = time.time()
     state, nonce, verifier = secrets.token_urlsafe(32), secrets.token_urlsafe(32), secrets.token_urlsafe(64)
     challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b'=').decode()
@@ -305,17 +308,26 @@ def google_start(person=Depends(identity)):
     })
     redirect = RedirectResponse(f'https://accounts.google.com/o/oauth2/v2/auth?{params}', status_code=302)
     set_session_cookie(redirect, person['session'])
+    redirect.set_cookie(
+        'oshin_oauth_state', state, httponly=True, samesite='lax',
+        secure=os.getenv('COOKIE_SECURE', 'false').lower() == 'true' or bool(os.getenv('VERCEL')),
+        max_age=600, path='/api/auth/google',
+    )
     return redirect
 
 
 @app.get('/api/auth/google/callback')
-def google_callback(code: str = '', state: str = '', error: str = '', person=Depends(identity)):
+def google_callback(request: Request, code: str = '', state: str = '', error: str = '', person=Depends(identity)):
     config = google_config()
     if error:
         return RedirectResponse(f"{config['frontend_url']}/?auth_error=google#account", status_code=303)
     with connect() as c:
         saved = c.execute('SELECT * FROM oauth_states WHERE state=?', (state,)).fetchone()
-        if not saved or saved['session_id'] != person['session'] or saved['expires'] < time.time():
+        oauth_state = request.cookies.get('oshin_oauth_state', '')
+        if not saved or saved['expires'] < time.time() or not (
+            saved['session_id'] == person['session']
+            or (oauth_state and hmac.compare_digest(oauth_state, state))
+        ):
             raise HTTPException(400, 'Phiên đăng nhập Google không hợp lệ hoặc đã hết hạn.')
         c.execute('DELETE FROM oauth_states WHERE state=?', (state,))
         saved = dict(saved)
@@ -350,6 +362,7 @@ def google_callback(code: str = '', state: str = '', error: str = '', person=Dep
         user = dict(user)
     redirect = RedirectResponse(f"{config['frontend_url']}/#account", status_code=303)
     authenticate(user, person, redirect)
+    redirect.delete_cookie('oshin_oauth_state', path='/api/auth/google')
     return redirect
 
 

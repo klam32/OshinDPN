@@ -100,6 +100,10 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(query['scope'], ['openid email profile'])
         self.assertEqual(query['code_challenge_method'], ['S256'])
         state = query['state'][0]
+        self.assertEqual(start.cookies.get('oshin_oauth_state'), state)
+        for cookie in list(self.client.cookies.jar):
+            if cookie.name == 'oshin_session':
+                self.client.cookies.jar.clear(cookie.domain, cookie.path, cookie.name)
         with connect() as c:
             saved = dict(c.execute('SELECT * FROM oauth_states WHERE state=?', (state,)).fetchone())
         token_response = MagicMock()
@@ -118,6 +122,12 @@ class WorkflowTests(unittest.TestCase):
             self.assertIsNone(c.execute('SELECT 1 FROM oauth_states WHERE state=?', (state,)).fetchone())
         replay = self.client.get(f'/api/auth/google/callback?code=test-code&state={state}', follow_redirects=False)
         self.assertEqual(replay.status_code, 400)
+
+    def test_google_oauth_start_uses_canonical_host(self):
+        with TestClient(app, base_url='https://preview.example', headers=HEADERS) as preview:
+            start = preview.get('/api/auth/google/start', follow_redirects=False)
+        self.assertEqual(start.status_code, 302)
+        self.assertEqual(start.headers['location'], 'http://testserver/api/auth/google/start')
 
     def test_all_seven_service_forms_and_excel(self):
         for service in services():
