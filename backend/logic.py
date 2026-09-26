@@ -221,9 +221,13 @@ def load_order(order_id):
     return order
 
 def export_order(order):
-    directory = db_path().parent / 'exports'
-    directory.mkdir(exist_ok=True)
-    (directory / f'{order["id"]}.xlsx').write_bytes(workbook(order))
+    try:
+        directory = db_path().parent / 'exports'
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / f'{order["id"]}.xlsx').write_bytes(workbook(order))
+    except Exception:
+        pass
+
 
 def _mail_subject(value):
     return ' '.join(str(value).replace('\r', ' ').replace('\n', ' ').split())[:180]

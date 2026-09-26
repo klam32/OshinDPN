@@ -15,16 +15,22 @@ export async function api(path, options = {}) {
     throw new Error('Chưa kết nối được máy chủ. Vui lòng kiểm tra backend và thử lại.');
   }
   const contentType = response.headers.get('content-type') || '';
+  if (!response.ok) {
+    if (contentType.includes('application/json')) {
+      const data = await response.json();
+      const msg =
+        typeof data.detail === 'string'
+          ? data.detail
+          : Array.isArray(data.detail)
+            ? data.detail.map((d) => d.msg).join(', ')
+            : 'Thông tin chưa hợp lệ. Hãy kiểm tra các trường bắt buộc.';
+      throw new Error(msg);
+    }
+    throw new Error('Máy chủ đang xử lý yêu cầu hoặc gặp lỗi tạm thời. Vui lòng thử lại sau giây lát.');
+  }
   if (!contentType.includes('application/json'))
     throw new Error('Máy chủ chưa sẵn sàng. Vui lòng thử lại sau.');
-  const data = await response.json();
-  if (!response.ok)
-    throw new Error(
-      typeof data.detail === 'string'
-        ? data.detail
-        : 'Thông tin chưa hợp lệ. Hãy kiểm tra các trường bắt buộc.',
-    );
-  return data;
+  return await response.json();
 }
 export const money = (n) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
