@@ -312,6 +312,76 @@ function BlogEditor({ blog, mutate, onClose, onDelete }) {
 }
 
 
+function CreateUserModal({ mutate, onClose }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('admin');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await mutate('/admin/users', 'POST', { name, email, password, role });
+      onClose();
+    } catch (err) {
+      setError(err.message || 'Lỗi khi tạo tài khoản');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal title="Thêm tài khoản quản trị viên mới" onClose={onClose}>
+      <form className="editor-body" onSubmit={submit}>
+        <Field
+          label="Họ tên"
+          required
+          minLength={2}
+          maxLength={100}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ví dụ: Nguyễn Văn A"
+        />
+        <Field
+          label="Email (nhận thông báo đơn hàng & quản trị khi là Admin)"
+          required
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="admin2@gmail.com"
+        />
+        <Field
+          label="Mật khẩu đăng nhập (tối thiểu 8 ký tự)"
+          required
+          type="password"
+          minLength={8}
+          maxLength={128}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+        />
+        <Field label="Vai trò">
+          <select value={role} onChange={(e) => setRole(e.target.value)}>
+            <option value="admin">Quản trị viên (Admin) - Có quyền quản trị & Nhận thông báo email</option>
+            <option value="customer">Khách hàng</option>
+          </select>
+        </Field>
+        <div style={{ background: '#f4f6f8', border: '1px solid #dfe3e8', padding: '10px 14px', borderRadius: '6px', fontSize: '12px', color: '#637381', lineHeight: '1.5' }}>
+          💡 <strong>Quy chế thông báo:</strong> Khi tài khoản có vai trò <strong>Admin</strong> và đang hoạt động, hệ thống sẽ tự động gửi email thông báo kèm file chiết tính mỗi khi có khách hàng gửi yêu cầu dịch vụ, phản hồi hoặc liên hệ mới.
+        </div>
+        <ErrorNotice error={error} />
+        <button className="button primary" disabled={busy || !name.trim() || !email.trim() || password.length < 8}>
+          {busy ? 'Đang tạo...' : 'Tạo tài khoản'}
+        </button>
+      </form>
+    </Modal>
+  );
+}
+
 function FeedbackEditor({ item, mutate, onClose }) {
   const [status, setStatus] = useState(item.status),
     [reply, setReply] = useState(item.reply),
@@ -1022,61 +1092,103 @@ export default function Admin({ user, logout, onUpdate }) {
                 )
               )}
               {tab === 'users' && (
-                <div className="admin-panel">
-                  <h3>Tài khoản khách hàng & quản trị</h3>
-                  <div className="table-scroll">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Họ tên</th>
-                          <th>Email</th>
-                          <th>Vai trò</th>
-                          <th>Trạng thái</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.users.map((u) => (
-                          <tr key={u.id}>
-                            <td>
-                              <b>{u.name}</b>
-                            </td>
-                            <td>{u.email}</td>
-                            <td>
-                              <select
-                                aria-label={`Vai trò ${u.email}`}
-                                disabled={u.id === user.id}
-                                value={u.role}
-                                onChange={(e) =>
-                                  action(`/admin/users/${u.id}`, 'PATCH', {
-                                    role: e.target.value,
-                                    active: !!u.active,
-                                  })
-                                }
-                              >
-                                <option value="customer">Khách hàng</option>
-                                <option value="admin">Admin</option>
-                              </select>
-                            </td>
-                            <td>
-                              <button
-                                disabled={u.id === user.id}
-                                className={`status ${u.active ? 'completed' : 'cancelled'}`}
-                                onClick={() =>
-                                  action(`/admin/users/${u.id}`, 'PATCH', {
-                                    role: u.role,
-                                    active: !u.active,
-                                  })
-                                }
-                              >
-                                {u.active ? 'Đang hoạt động · Khóa' : 'Đã khóa · Mở lại'}
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                <>
+                  <div className="panel-heading">
+                    <p>Quản lý tài khoản và phân quyền quản trị viên nhận thông báo hệ thống.</p>
+                    <button
+                      className="button primary small"
+                      onClick={() => setEdit({ type: 'createUser', value: null })}
+                    >
+                      <Icon name="plus" />
+                      Thêm quản trị viên
+                    </button>
                   </div>
-                </div>
+                  <div className="admin-panel">
+                    <div className="table-scroll">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Họ tên</th>
+                            <th>Email</th>
+                            <th>Vai trò</th>
+                            <th>Thông báo mail</th>
+                            <th>Trạng thái</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.users.map((u) => (
+                            <tr key={u.id}>
+                              <td>
+                                <b>{u.name}</b>
+                                {u.id === user.id && (
+                                  <span style={{ fontSize: '11px', color: '#687952', marginLeft: '6px' }}>
+                                    (Bạn)
+                                  </span>
+                                )}
+                              </td>
+                              <td>{u.email}</td>
+                              <td>
+                                <select
+                                  aria-label={`Vai trò ${u.email}`}
+                                  disabled={u.id === user.id}
+                                  value={u.role}
+                                  onChange={(e) =>
+                                    action(`/admin/users/${u.id}`, 'PATCH', {
+                                      role: e.target.value,
+                                      active: !!u.active,
+                                    })
+                                  }
+                                >
+                                  <option value="customer">Khách hàng</option>
+                                  <option value="admin">Quản trị viên (Admin)</option>
+                                </select>
+                              </td>
+                              <td>
+                                {u.role === 'admin' && u.active ? (
+                                  <span
+                                    style={{
+                                      background: '#e3f1df',
+                                      color: '#108043',
+                                      border: '1px solid #aee9d1',
+                                      padding: '3px 8px',
+                                      borderRadius: '4px',
+                                      fontSize: '11px',
+                                      fontWeight: 600,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                    }}
+                                    title="Tài khoản Admin này sẽ tự động nhận email thông báo khi có đơn hàng, phản hồi hoặc liên hệ mới"
+                                  >
+                                    <Icon name="mail" size={13} /> Nhận thông báo
+                                  </span>
+                                ) : (
+                                  <span style={{ color: '#919eab', fontSize: '11px' }}>
+                                    Không nhận
+                                  </span>
+                                )}
+                              </td>
+                              <td>
+                                <button
+                                  disabled={u.id === user.id}
+                                  className={`status ${u.active ? 'completed' : 'cancelled'}`}
+                                  onClick={() =>
+                                    action(`/admin/users/${u.id}`, 'PATCH', {
+                                      role: u.role,
+                                      active: !u.active,
+                                    })
+                                  }
+                                >
+                                  {u.active ? 'Đang hoạt động · Khóa' : 'Đã khóa · Mở lại'}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
               )}
               {tab === 'feedback' && (
                 <div className="admin-panel">
@@ -1220,6 +1332,9 @@ export default function Admin({ user, logout, onUpdate }) {
       )}
       {edit?.type === 'feedback' && (
         <FeedbackEditor item={edit.value} mutate={mutate} onClose={closeEdit} />
+      )}
+      {edit?.type === 'createUser' && (
+        <CreateUserModal mutate={mutate} onClose={closeEdit} />
       )}
       {edit?.type === 'deleteBlog' && (
         <Modal title="Xóa bài viết" onClose={closeEdit}>

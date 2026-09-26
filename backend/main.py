@@ -101,6 +101,17 @@ def admin_online():
     with connect() as c:
         return c.execute("SELECT 1 FROM sessions s JOIN users u ON u.id=s.user_id WHERE u.role='admin' AND u.active=1 AND s.online=1 AND s.heartbeat>? AND s.expires>? LIMIT 1", (time.time() - 50, time.time())).fetchone() is not None
 
+def active_admin_emails():
+    with connect() as c:
+        rows = c.execute("SELECT email FROM users WHERE role='admin' AND active=1").fetchall()
+    emails = {r['email'].strip().lower() for r in rows if r['email']}
+    env_admin = os.getenv('ADMIN_EMAIL', '').strip().lower()
+    if env_admin: emails.add(env_admin)
+    env_feedback = os.getenv('FEEDBACK_ADMIN_EMAIL', '').strip().lower()
+    if env_feedback: emails.add(env_feedback)
+    emails.discard('thanhlan.datphuongnam@gmail.com')
+    return sorted(list(emails))
+
 def ensure_owner(owner, person):
     if owner != person['owner'] and not (person['user'] and person['user']['role'] == 'admin'): raise HTTPException(404, 'Không tìm thấy dữ liệu.')
 
@@ -419,8 +430,8 @@ def create_order(data: OrderInput, tasks: BackgroundTasks, person=Depends(identi
             ensure_owner(existing['owner'], person)
         else:
             c.execute('INSERT INTO orders(id,owner,data,status,quote,created) VALUES(?,?,?,?,?,?)', (order_id, person['owner'], dump(data.model_dump()), 'new', dump(quote), time.time()))
-            admin_email = (os.getenv('ADMIN_EMAIL') or os.getenv('FEEDBACK_ADMIN_EMAIL') or 'adminluanvann@gmail.com').strip().lower()
-            recipients = {admin_email}
+            admin_emails = active_admin_emails()
+            recipients = set(admin_emails)
             if data.email and data.email.strip().lower() != 'thanhlan.datphuongnam@gmail.com':
                 recipients.add(data.email.strip().lower())
             recipients.discard('thanhlan.datphuongnam@gmail.com')
@@ -473,12 +484,12 @@ def feedback(data: FeedbackInput, tasks: BackgroundTasks, person=Depends(identit
     payload = data.model_dump()
     with connect() as c:
         c.execute('INSERT INTO feedback(id,owner,data,created) VALUES(?,?,?,?)', (identifier, person['owner'], dump(payload), time.time()))
-    admin_email = (os.getenv('FEEDBACK_ADMIN_EMAIL') or os.getenv('ADMIN_EMAIL') or 'adminluanvann@gmail.com').strip().lower()
-    if admin_email == 'thanhlan.datphuongnam@gmail.com': admin_email = 'adminluanvann@gmail.com'
+    admin_emails = active_admin_emails()
     subject, body = feedback_admin_message(identifier, payload)
-    mail_id = queue_mail('feedback_admin', identifier, admin_email, subject, body, reply_to=payload['email'])
-    tasks.add_task(deliver_mail, mail_id)
-    return {'id': identifier, 'mail_queued': True}
+    for admin_email in admin_emails:
+        mail_id = queue_mail('feedback_admin', identifier, admin_email, subject, body, reply_to=payload['email'])
+        if mail_id: tasks.add_task(deliver_mail, mail_id)
+    return {'id': identifier, 'mail_queued': bool(admin_emails)}
 
 @app.get('/api/feedback')
 def my_feedback(person=Depends(identity)):
@@ -506,12 +517,12 @@ def contact(data: ContactInput, tasks: BackgroundTasks, person=Depends(identity)
             ensure_owner(existing['owner'], person)
             return {'id': identifier, 'mail_queued': True}
         c.execute('INSERT INTO feedback(id,owner,data,created) VALUES(?,?,?,?)', (identifier, person['owner'], dump(payload), time.time()))
-    recipient = (os.getenv('FEEDBACK_ADMIN_EMAIL') or os.getenv('ADMIN_EMAIL') or 'adminluanvann@gmail.com').strip().lower()
-    if recipient == 'thanhlan.datphuongnam@gmail.com': recipient = 'adminluanvann@gmail.com'
+    admin_emails = active_admin_emails()
     subject, body = feedback_admin_message(identifier, payload)
-    mail_id = queue_mail('contact_admin', identifier, recipient, subject, body, reply_to=data.email)
-    tasks.add_task(deliver_mail, mail_id)
-    return {'id': identifier, 'mail_queued': True}
+    for admin_email in admin_emails:
+        mail_id = queue_mail('contact_admin', identifier, admin_email, subject, body, reply_to=data.email)
+        if mail_id: tasks.add_task(deliver_mail, mail_id)
+    return {'id': identifier, 'mail_queued': bool(admin_emails)}
 
 def chat_for(person):
     with connect() as c:
@@ -630,6 +641,31 @@ def update_feedback(identifier: str, data: FeedbackReply, tasks: BackgroundTasks
             )
             tasks.add_task(deliver_mail, mail_id)
     return {'ok': True, 'mail_queued': bool(mail_id)}
+
+class CreateUserInput(StrictModel):
+    name: str = Field(min_length=2, max_length=100)
+    email: str = Field(min_length=5, max_length=200)
+    password: str = Field(min_length=8, max_length=128)
+    role: Literal['customer', 'admin'] = 'admin'
+
+    @field_validator('email')
+    @classmethod
+    def check_email(cls, v):
+        if not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', v): raise ValueError('Email không hợp lệ')
+        return v.lower()
+
+@app.post('/api/admin/users')
+def create_user(data: CreateUserInput, person=Depends(admin)):
+    email = data.email.strip().lower()
+    with connect() as c:
+        if c.execute('SELECT 1 FROM users WHERE email=?', (email,)).fetchone():
+            raise HTTPException(422, 'Email này đã tồn tại trong hệ thống.')
+        identifier = secrets.token_hex(16)
+        c.execute(
+            'INSERT INTO users(id,name,email,password,role,active,created) VALUES(?,?,?,?,?,1,?)',
+            (identifier, data.name.strip(), email, password_hash(data.password), data.role, time.time())
+        )
+    return {'ok': True, 'id': identifier}
 
 class UserUpdate(StrictModel):
     active: bool
