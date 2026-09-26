@@ -278,4 +278,32 @@ class WorkflowTests(unittest.TestCase):
         with TestClient(app) as stranger:
             self.assertEqual(stranger.post('/api/auth/logout').status_code, 403)
 
+    def test_admin_user_deletion_and_self_delete_prevention(self):
+        # Create a new user
+        r = self.admin.post('/api/admin/users', json={
+            'name': 'Nhân viên test',
+            'email': 'staff.test@example.com',
+            'password': 'Password123456',
+            'role': 'admin'
+        })
+        self.assertEqual(r.status_code, 200)
+        user_id = r.json()['id']
+        
+        # Verify user exists in admin dashboard
+        users = self.admin.get('/api/admin/dashboard').json()['users']
+        self.assertTrue(any(u['id'] == user_id for u in users))
+        
+        # Self delete is rejected
+        current_admin_id = [u['id'] for u in users if u['email'] == 'admin@example.com'][0]
+        self.assertEqual(self.admin.delete(f'/api/admin/users/{current_admin_id}').status_code, 422)
+        
+        # Admin can delete the created user
+        del_res = self.admin.delete(f'/api/admin/users/{user_id}')
+        self.assertEqual(del_res.status_code, 200)
+        
+        # Verify user is gone
+        users_after = self.admin.get('/api/admin/dashboard').json()['users']
+        self.assertFalse(any(u['id'] == user_id for u in users_after))
+
 if __name__ == '__main__': unittest.main()
+

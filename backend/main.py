@@ -685,6 +685,19 @@ def update_user(identifier: str, data: UserUpdate, person=Depends(admin)):
         c.execute('DELETE FROM sessions WHERE user_id=?', (identifier,))
     return {'ok': True}
 
+@app.delete('/api/admin/users/{identifier}')
+def delete_user(identifier: str, person=Depends(admin)):
+    if identifier == person['user']['id']: raise HTTPException(422, 'Không thể xóa chính tài khoản đang sử dụng.')
+    with connect() as c:
+        row = c.execute('SELECT email FROM users WHERE id=?', (identifier,)).fetchone()
+        if not row: raise HTTPException(404, 'Không tìm thấy tài khoản.')
+        email = row['email'] if isinstance(row, dict) else row[0]
+        c.execute('DELETE FROM sessions WHERE user_id=?', (identifier,))
+        c.execute('DELETE FROM google_identities WHERE user_id=?', (identifier,))
+        c.execute('DELETE FROM auth_otp WHERE user_id=? OR email=?', (identifier, email))
+        c.execute('DELETE FROM users WHERE id=?', (identifier,))
+    return {'ok': True}
+
 class ServiceInput(StrictModel):
     id: str = Field(pattern=r'^[a-z0-9-]{2,80}$')
     name: str = Field(min_length=3, max_length=150)
