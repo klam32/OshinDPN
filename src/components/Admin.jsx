@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, date, money, statuses } from '../lib/api';
 import { Empty, ErrorNotice, Field, Icon, Logo, Modal } from './ui';
 import { QuoteTable } from './Booking';
@@ -566,6 +566,13 @@ export default function Admin({ user, logout, onUpdate }) {
     [selectedChat, setSelectedChat] = useState(null),
     [reply, setReply] = useState(''),
     [sending, setSending] = useState(false);
+  const messagesEndRef = useRef(null);
+  const chat = data?.chats.find((c) => c.id === selectedChat);
+  useEffect(() => {
+    if (tab === 'chat' && chat) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [tab, selectedChat, chat?.messages?.length]);
   const load = useCallback(async () => {
     try {
       setData(await api('/admin/dashboard'));
@@ -625,7 +632,6 @@ export default function Admin({ user, logout, onUpdate }) {
           .toLowerCase()
           .includes(search.toLowerCase()),
     ) || [];
-  const chat = data?.chats.find((c) => c.id === selectedChat);
   const editOrder = (o) =>
     setEdit({
       type: 'order',
@@ -916,6 +922,7 @@ export default function Admin({ user, logout, onUpdate }) {
                                 {m.content}
                               </div>
                             ))}
+                            <div ref={messagesEndRef} />
                           </div>
                           <form
                             onSubmit={async (e) => {
