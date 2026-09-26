@@ -90,7 +90,7 @@ def dump(value):
 DEFAULT_SETTINGS = {
     'company_name': 'Oshin Thời Đại – Đất Phương Nam',
     'hotline': '0901 040 484',
-    'email': 'thanhlan.datphuongnam@gmail.com',
+    'email': os.getenv('ADMIN_EMAIL', 'adminluanvann@gmail.com'),
     'address': 'Cần Thơ và Đồng bằng sông Cửu Long',
     'hero_title': 'Nhà sạch thảnh thơi.\nCuộc sống rạng ngời.',
     'hero_description': 'Từ tổ ấm đến nơi làm việc, Đất Phương Nam chăm chút từng không gian để bạn an tâm dành thời gian cho những điều yêu thương.',
@@ -194,6 +194,13 @@ def init_db():
             if len(password) < 12:
                 raise RuntimeError('ADMIN_PASSWORD must have at least 12 characters')
             c.execute('INSERT INTO users VALUES(?,?,?,?,?,1,?) ON CONFLICT DO NOTHING', (secrets.token_hex(16), 'Quản trị viên', email.lower(), password_hash(password), 'admin', time.time()))
+        row = c.execute('SELECT data FROM settings WHERE id=1').fetchone()
+        if row:
+            curr_settings = json.loads(row['data'])
+            if curr_settings.get('email') == 'thanhlan.datphuongnam@gmail.com':
+                curr_settings['email'] = os.getenv('ADMIN_EMAIL', 'adminluanvann@gmail.com')
+                c.execute('UPDATE settings SET data=? WHERE id=1', (dump(curr_settings),))
+        c.execute("UPDATE outbox SET status='cancelled', error='Hủy gửi mail thanhlan theo cấu hình mới' WHERE recipient='thanhlan.datphuongnam@gmail.com' AND status='pending'")
 
 def settings():
     with connect() as c:

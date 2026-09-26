@@ -419,7 +419,12 @@ def create_order(data: OrderInput, tasks: BackgroundTasks, person=Depends(identi
             ensure_owner(existing['owner'], person)
         else:
             c.execute('INSERT INTO orders(id,owner,data,status,quote,created) VALUES(?,?,?,?,?,?)', (order_id, person['owner'], dump(data.model_dump()), 'new', dump(quote), time.time()))
-            for email in set(filter(None, [data.email, settings()['email']])):
+            admin_email = (os.getenv('ADMIN_EMAIL') or os.getenv('FEEDBACK_ADMIN_EMAIL') or 'adminluanvann@gmail.com').strip().lower()
+            recipients = {admin_email}
+            if data.email and data.email.strip().lower() != 'thanhlan.datphuongnam@gmail.com':
+                recipients.add(data.email.strip().lower())
+            recipients.discard('thanhlan.datphuongnam@gmail.com')
+            for email in recipients:
                 c.execute(
                     """INSERT INTO outbox(
                         id,kind,reference_id,order_id,recipient,subject,body,attach_order,created
@@ -468,7 +473,8 @@ def feedback(data: FeedbackInput, tasks: BackgroundTasks, person=Depends(identit
     payload = data.model_dump()
     with connect() as c:
         c.execute('INSERT INTO feedback(id,owner,data,created) VALUES(?,?,?,?)', (identifier, person['owner'], dump(payload), time.time()))
-    admin_email = (os.getenv('FEEDBACK_ADMIN_EMAIL') or os.getenv('ADMIN_EMAIL') or settings()['email']).strip().lower()
+    admin_email = (os.getenv('FEEDBACK_ADMIN_EMAIL') or os.getenv('ADMIN_EMAIL') or 'adminluanvann@gmail.com').strip().lower()
+    if admin_email == 'thanhlan.datphuongnam@gmail.com': admin_email = 'adminluanvann@gmail.com'
     subject, body = feedback_admin_message(identifier, payload)
     mail_id = queue_mail('feedback_admin', identifier, admin_email, subject, body, reply_to=payload['email'])
     tasks.add_task(deliver_mail, mail_id)
@@ -500,7 +506,8 @@ def contact(data: ContactInput, tasks: BackgroundTasks, person=Depends(identity)
             ensure_owner(existing['owner'], person)
             return {'id': identifier, 'mail_queued': True}
         c.execute('INSERT INTO feedback(id,owner,data,created) VALUES(?,?,?,?)', (identifier, person['owner'], dump(payload), time.time()))
-    recipient = (os.getenv('FEEDBACK_ADMIN_EMAIL') or os.getenv('ADMIN_EMAIL') or settings()['email']).strip().lower()
+    recipient = (os.getenv('FEEDBACK_ADMIN_EMAIL') or os.getenv('ADMIN_EMAIL') or 'adminluanvann@gmail.com').strip().lower()
+    if recipient == 'thanhlan.datphuongnam@gmail.com': recipient = 'adminluanvann@gmail.com'
     subject, body = feedback_admin_message(identifier, payload)
     mail_id = queue_mail('contact_admin', identifier, recipient, subject, body, reply_to=data.email)
     tasks.add_task(deliver_mail, mail_id)
@@ -615,9 +622,11 @@ def update_feedback(identifier: str, data: FeedbackReply, tasks: BackgroundTasks
         customer_email = payload.get('email', '').strip().lower()
         if customer_email:
             subject, body = feedback_customer_message(identifier, payload, data.status, data.reply)
+            admin_reply = (os.getenv('FEEDBACK_ADMIN_EMAIL') or os.getenv('ADMIN_EMAIL') or 'adminluanvann@gmail.com').strip().lower()
+            if admin_reply == 'thanhlan.datphuongnam@gmail.com': admin_reply = 'adminluanvann@gmail.com'
             mail_id = queue_mail(
                 'feedback_customer', identifier, customer_email, subject, body,
-                reply_to=os.getenv('FEEDBACK_ADMIN_EMAIL') or os.getenv('ADMIN_EMAIL') or settings()['email'],
+                reply_to=admin_reply,
             )
             tasks.add_task(deliver_mail, mail_id)
     return {'ok': True, 'mail_queued': bool(mail_id)}

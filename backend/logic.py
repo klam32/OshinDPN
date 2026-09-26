@@ -234,6 +234,9 @@ def _mail_subject(value):
 
 
 def queue_mail(kind, reference_id, recipient, subject, body, reply_to='', order_id=None, attach_order=False):
+    clean_recipient = recipient.strip().lower()
+    if clean_recipient == 'thanhlan.datphuongnam@gmail.com':
+        return None
     identifier = secrets.token_hex(12)
     with connect() as c:
         c.execute(
@@ -241,7 +244,7 @@ def queue_mail(kind, reference_id, recipient, subject, body, reply_to='', order_
                 id,kind,reference_id,order_id,recipient,reply_to,subject,body,attach_order,created
             ) VALUES(?,?,?,?,?,?,?,?,?,?)""",
             (
-                identifier, kind, reference_id, order_id, recipient.strip().lower(), reply_to.strip().lower(),
+                identifier, kind, reference_id, order_id, clean_recipient, reply_to.strip().lower(),
                 _mail_subject(subject), body.strip(), int(attach_order), time.time(),
             ),
         )
@@ -302,6 +305,9 @@ def deliver_mail(mail_id):
         if not row or row['status'] in ('sent', 'sending'):
             return
         row = dict(row)
+        if row.get('recipient', '').strip().lower() == 'thanhlan.datphuongnam@gmail.com':
+            c.execute("UPDATE outbox SET status='cancelled',error='Đã hủy theo cấu hình không gửi về thanhlan' WHERE id=?", (mail_id,))
+            return
         c.execute("UPDATE outbox SET status='sending',error='' WHERE id=?", (mail_id,))
     status, error = 'sent', ''
     if not os.getenv('SMTP_HOST') or not os.getenv('SMTP_FROM'):
