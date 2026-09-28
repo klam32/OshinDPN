@@ -110,6 +110,8 @@ def init_db():
     CREATE TABLE IF NOT EXISTS price_items(id TEXT PRIMARY KEY, data TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS content_migrations(id TEXT PRIMARY KEY);
     CREATE TABLE IF NOT EXISTS blogs(id TEXT PRIMARY KEY, title TEXT NOT NULL, category TEXT NOT NULL, excerpt TEXT NOT NULL, body TEXT NOT NULL, image TEXT NOT NULL, published INTEGER DEFAULT 1, created DOUBLE PRECISION NOT NULL);
+    CREATE TABLE IF NOT EXISTS blog_meta(id TEXT PRIMARY KEY, data TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS media_files(id TEXT PRIMARY KEY, filename TEXT NOT NULL, mime TEXT NOT NULL, data TEXT NOT NULL, created DOUBLE PRECISION NOT NULL);
     CREATE TABLE IF NOT EXISTS orders(id TEXT PRIMARY KEY, owner TEXT NOT NULL, data TEXT NOT NULL, status TEXT NOT NULL, quote TEXT NOT NULL, summary TEXT NOT NULL DEFAULT '', created DOUBLE PRECISION NOT NULL);
     CREATE TABLE IF NOT EXISTS chats(id TEXT PRIMARY KEY, owner TEXT NOT NULL, mode TEXT NOT NULL DEFAULT 'ai', created DOUBLE PRECISION NOT NULL);
     CREATE TABLE IF NOT EXISTS messages(id {message_key}, chat_id TEXT NOT NULL REFERENCES chats(id), role TEXT NOT NULL, content TEXT NOT NULL, created DOUBLE PRECISION NOT NULL);
@@ -150,6 +152,7 @@ def init_db():
         c.execute('CREATE INDEX IF NOT EXISTS idx_outbox_order ON outbox(order_id)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_outbox_reference ON outbox(reference_id)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_auth_otp_email ON auth_otp(email,purpose,created)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_media_created ON media_files(created)')
         c.execute('INSERT INTO settings VALUES(1,?) ON CONFLICT DO NOTHING', (dump(DEFAULT_SETTINGS),))
         for service in json.loads((ROOT / 'src/data/catalog.json').read_text(encoding='utf-8')):
             c.execute('INSERT INTO services VALUES(?,?) ON CONFLICT DO NOTHING', (service['id'], dump(service)))

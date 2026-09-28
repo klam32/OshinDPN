@@ -28,6 +28,7 @@ const paths = {
   menu: 'M3 6h18M3 12h18M3 18h18',
   file: 'M5 2h9l5 5v15H5Zm9 0v6h5M8 12h8m-8 4h8',
   download: 'M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4',
+  upload: 'M12 16V4m-5 5 5-5 5 5M4 17v4h16v-4',
   grid: 'M3 3h7v7H3Zm11 0h7v7h-7ZM3 14h7v7H3Zm11 0h7v7h-7Z',
   settings:
     'M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8M9 2h6l1 4 4 1 2 5-3 3v5l-5 2-3-3-5 1-3-5 2-4-1-5 5-2Z',

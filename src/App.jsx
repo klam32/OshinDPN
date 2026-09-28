@@ -17,7 +17,7 @@ import {
 } from './components/Pages';
 
 import { api } from './lib/api';
-import { Icon, Logo } from './components/ui';
+import { Icon } from './components/ui';
 import Booking from './components/Booking';
 import { Account, Auth, Chat, Feedback } from './components/Customer';
 import Admin from './components/Admin';
@@ -211,6 +211,7 @@ export default function App() {
               key={query}
               blogs={data.blogs}
               category={new URLSearchParams(query).get('chuyen-muc') || ''}
+              initialQuery={new URLSearchParams(query).get('tu-khoa') || ''}
             />
           ) : article ? (
             <ArticlePage article={article} blogs={data.blogs} openBooking={openBooking} />
@@ -226,59 +227,53 @@ export default function App() {
           )}
           <footer className="site-footer" id="contact">
             <div className="container footer-top">
-              <div>
-                <Logo light />
+              <div className="footer-about">
+                <h4>GIỚI THIỆU</h4>
                 <p>
-                  Dịch vụ cho gia đình và doanh nghiệp tại Cần Thơ, Đồng bằng sông Cửu Long. Đồng
-                  hành từ năm 2004.
+                  Công ty TNHH dịch vụ Oshin Thời Đại – Đất Phương Nam là doanh nghiệp dịch vụ tích
+                  hợp tại Đồng bằng sông Cửu Long. Chúng tôi cung cấp hệ sinh thái từ vệ sinh công
+                  nghiệp, cung ứng lao động đến vận chuyển, bảo trì và chăm sóc cảnh quan.
                 </p>
-                <span className="footer-location">
-                  <Icon name="pin" size={17} /> {data.settings.address}
-                </span>
+                <div className="footer-socials" aria-label="Mạng xã hội">
+                  <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" aria-label="Facebook">f</a>
+                  <a href="https://www.youtube.com/" target="_blank" rel="noreferrer" aria-label="YouTube">▶</a>
+                  <a href="https://zalo.me/0901040484" target="_blank" rel="noreferrer" aria-label="Zalo">Z</a>
+                </div>
               </div>
-              <div>
-                <h4>Khám phá</h4>
-                <a href="#/gioi-thieu">Về Đất Phương Nam</a>
-                <a href="#/lich-su-hinh-thanh">Lịch sử hình thành</a>
-                <a href="#/tam-nhin-su-menh">Tầm nhìn sứ mệnh</a>
-                <a href="#services">Dịch vụ của chúng tôi</a>
-                <a href="#process">Quy trình dịch vụ</a>
-                <a href="#/tin-tuc">Tin tức & chia sẻ</a>
+              <div className="footer-contact">
+                <h4>THÔNG TIN LIÊN HỆ</h4>
+                <strong>{data.settings.legal_name || data.settings.company_name}</strong>
+                <span><b>Địa chỉ:</b> {data.settings.address}</span>
+                <span><b>Điện thoại:</b> {data.settings.landline ? `${data.settings.landline} – ` : ''}<a href={`tel:${data.settings.hotline.replaceAll(' ', '')}`}>{data.settings.hotline}</a></span>
+                <span><b>Email:</b> <a href={`mailto:${data.settings.email}`}>{data.settings.email}</a></span>
+                <span><b>Website:</b> dichvudatphuongnam.net</span>
+                {data.settings.tax_code && <span><b>MST:</b> {data.settings.tax_code}</span>}
               </div>
-              <div>
-                <h4>Chăm sóc khách hàng</h4>
-                <a href="#account">Yêu cầu của tôi</a>
-                <a href="#faq">Câu hỏi thường gặp</a>
-                <a href="#/bang-gia">Bảng giá & chiết tính</a>
-                <a href="#/lien-he">Gửi lời nhắn liên hệ</a>
+              <div className="footer-services">
+                <h4>DỊCH VỤ CUNG CẤP</h4>
+                {data.services.slice(0, 7).map((service) => (
+                  <button key={service.id} onClick={() => openBooking(service.id)}>
+                    {service.name}
+                  </button>
+                ))}
+              </div>
+              <div className="footer-policy">
+                <h4>CHÍNH SÁCH & PHÁP LÝ</h4>
+                <a href="#">Trang chủ</a>
+                <a href="#/gioi-thieu">Giới thiệu</a>
+                <a href="#/bang-gia">Bảng giá dịch vụ</a>
+                <a href="#/tin-tuc">Tin tức</a>
+                <a href="#/lien-he">Liên hệ</a>
                 <button onClick={() => setFeedback(true)}>Phản hồi & báo lỗi</button>
-                <button onClick={() => setChatOpen(true)}>Tư vấn cùng Nở</button>
-              </div>
-              <div>
-                <h4>Kết nối với chúng tôi</h4>
-                <a
-                  className="footer-hotline"
-                  href={`tel:${data.settings.hotline.replaceAll(' ', '')}`}
-                >
-                  <Icon name="phone" size={21} /> {data.settings.hotline}
-                </a>
-                <a className="footer-email" href={`mailto:${data.settings.email}`}>
-                  {data.settings.email}
-                </a>
-                <button
-                  className="button yellow small"
-                  onClick={() => openBooking(undefined, 'survey')}
-                >
-                  Hẹn khảo sát <Icon name="arrow" size={16} />
-                </button>
               </div>
             </div>
             <div className="container footer-bottom">
               <span>
-                © {new Date().getFullYear()} {data.settings.company_name}.
+                Copyright © {new Date().getFullYear()} {data.settings.company_name} | {data.settings.hotline}.
               </span>
-              <span>Khẳng định sự thành đạt</span>
+              <span>Oshin Thời Đại – Khẳng định sự thành đạt</span>
             </div>
+            <button className="footer-back-top" aria-label="Lên đầu trang" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>⌃</button>
           </footer>
           <Chat open={chatOpen} setOpen={setChatOpen} sessionKey={user?.id || 'guest'} />
           <button className="feedback-float" onClick={() => setFeedback(true)}>

@@ -114,6 +114,7 @@ test('Nở offline, tư vấn trực tiếp hai trình duyệt và quay về N�
 });
 
 test('Quản trị: xử lý đơn, giá, QR và chỉnh Blog, dịch vụ, cấu hình', async ({ page }) => {
+  test.setTimeout(90000);
   await loginAdmin(page);
   const seed = await page.request.post('/api/orders', {
     headers,
@@ -156,23 +157,29 @@ test('Quản trị: xử lý đơn, giá, QR và chỉnh Blog, dịch vụ, cấ
     .getByRole('button', { name: 'Quản lý dịch vụ', exact: true })
     .click();
   await page.getByRole('button', { name: 'Chỉnh sửa dịch vụ' }).first().click();
-  await modal.getByLabel('Đơn giá tham khảo (VND)').fill('13000');
-  await modal.getByRole('button', { name: 'Lưu dịch vụ', exact: true }).click();
-  await expect(modal).toHaveCount(0);
+  await page.getByLabel('Đơn giá tham khảo (VNĐ)').fill('13000');
+  await page.locator('.service-haravan-editor input[type="file"]').setInputFiles({
+    name: 'service-e2e.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64'),
+  });
+  await expect(page.locator('.service-haravan-editor .image-upload-preview img')).toHaveAttribute('src', /\/api\/media\//);
+  await page.getByRole('button', { name: 'Lưu dịch vụ', exact: true }).click();
+  await expect(page.locator('.service-haravan-editor')).toHaveCount(0);
   await expect(page.locator('.admin-service-grid article').first()).toContainText('13.000');
   await page
     .locator('.admin-sidebar')
     .getByRole('button', { name: 'Bài viết & Blog', exact: true })
     .click();
   await page.getByRole('button', { name: 'Viết bài mới' }).click();
-  await modal.getByLabel('Tiêu đề').fill('Bài viết kiểm thử E2E');
-  await modal.getByLabel('Tóm tắt').fill('Tóm tắt bài viết kiểm thử tự động');
-  await modal
-    .getByLabel('Nội dung')
-    .fill('Đây là nội dung bài viết kiểm thử dài hơn hai mươi ký tự.');
-  await modal.getByRole('checkbox', { name: 'Xuất bản công khai' }).check();
-  await modal.getByRole('button', { name: 'Lưu bài viết', exact: true }).click();
-  await expect(modal).toHaveCount(0);
+  await page.getByLabel('Tiêu đề').fill('Bài viết kiểm thử E2E');
+  await page.getByRole('button', { name: 'Mã HTML' }).click();
+  await page.locator('.haravan-html-textarea').fill('<p>Đây là nội dung bài viết kiểm thử dài hơn hai mươi ký tự.</p>');
+  await page.getByRole('button', { name: 'Thêm trích dẫn' }).click();
+  await page.getByLabel('Tóm tắt bài viết').fill('Tóm tắt bài viết kiểm thử tự động');
+  await page.getByRole('button', { name: 'Lưu bài viết', exact: true }).click();
+  await expect(page.locator('.haravan-alert-success')).toContainText('đã được lưu');
+  await page.getByRole('button', { name: 'Danh sách bài viết', exact: true }).click();
   await expect(page.locator('tbody')).toContainText('Bài viết kiểm thử E2E');
   await page
     .locator('.admin-sidebar')

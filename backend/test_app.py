@@ -266,12 +266,30 @@ class WorkflowTests(unittest.TestCase):
         self.admin.put(f'/api/admin/services/{service["id"]}', json=service).raise_for_status()
         self.assertEqual(len(self.client.get('/api/bootstrap').json()['services']), 6)
         self.assertEqual(self.client.post('/api/orders', json=self.payload()).status_code, 404)
-        body = {'title': 'Bài kiểm thử mới', 'category': 'Kiểm thử', 'excerpt': 'Nội dung mô tả', 'body': 'Nội dung kiểm thử dài hơn hai mươi ký tự.', 'image': '/images/hero.jpg', 'published': False}
+        body = {'title': 'Bài kiểm thử mới', 'category': 'Kiểm thử', 'excerpt': 'Nội dung mô tả', 'body': 'Nội dung kiểm thử dài hơn hai mươi ký tự.', 'image': '/images/hero.jpg', 'published': False, 'author': 'Biên tập viên', 'tags': ['kiem-thu', 'oshin']}
         self.admin.put('/api/admin/blogs/new-blog', json=body).raise_for_status()
         self.assertFalse(any(b['id'] == 'new-blog' for b in self.client.get('/api/bootstrap').json()['blogs']))
         body['published'] = True
         self.admin.put('/api/admin/blogs/new-blog', json=body).raise_for_status()
-        self.assertTrue(any(b['id'] == 'new-blog' for b in self.client.get('/api/bootstrap').json()['blogs']))
+        saved = next(b for b in self.client.get('/api/bootstrap').json()['blogs'] if b['id'] == 'new-blog')
+        self.assertEqual(saved['author'], 'Biên tập viên')
+        self.assertEqual(saved['tags'], ['kiem-thu', 'oshin'])
+
+    def test_admin_image_upload_and_public_delivery(self):
+        # 1x1 transparent PNG.
+        encoded = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+        uploaded = self.admin.post('/api/admin/uploads', json={
+            'filename': 'anh kiem thu.png', 'mime': 'image/png', 'data': encoded,
+        })
+        self.assertEqual(uploaded.status_code, 200, uploaded.text)
+        image = self.client.get(uploaded.json()['url'])
+        self.assertEqual(image.status_code, 200)
+        self.assertEqual(image.headers['content-type'], 'image/png')
+        self.assertTrue(image.content.startswith(b'\x89PNG'))
+        rejected = self.admin.post('/api/admin/uploads', json={
+            'filename': 'gia.png', 'mime': 'image/png', 'data': 'bm90LWFuLWltYWdl',
+        })
+        self.assertEqual(rejected.status_code, 422)
 
     def test_cross_origin_and_missing_csrf_header_rejected(self):
         self.assertEqual(self.client.post('/api/auth/logout', headers={'Origin': 'https://evil.example'}).status_code, 403)
@@ -306,4 +324,3 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse(any(u['id'] == user_id for u in users_after))
 
 if __name__ == '__main__': unittest.main()
-

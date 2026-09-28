@@ -33,6 +33,50 @@ export async function api(path, options = {}) {
     throw new Error('Máy chủ chưa sẵn sàng. Vui lòng thử lại sau.');
   return await response.json();
 }
+
+const readBase64 = (blob) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+    reader.onerror = () => reject(new Error('Không thể đọc tệp ảnh đã chọn.'));
+    reader.readAsDataURL(blob);
+  });
+
+async function optimizeImage(file) {
+  if (file.type === 'image/gif' || file.size < 1200000) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, mime, 0.86));
+    return blob && blob.size < file.size ? new File([blob], file.name, { type: mime }) : file;
+  } catch {
+    return file;
+  }
+}
+
+export async function uploadImage(file) {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  if (!allowed.includes(file?.type))
+    throw new Error('Chỉ hỗ trợ ảnh JPG, PNG, WEBP hoặc GIF.');
+  const prepared = await optimizeImage(file);
+  if (prepared.size > 2800000)
+    throw new Error('Ảnh vẫn lớn hơn 2,8 MB sau khi tối ưu. Vui lòng chọn ảnh nhỏ hơn.');
+  const result = await api('/admin/uploads', {
+    method: 'POST',
+    body: {
+      filename: prepared.name || file.name,
+      mime: prepared.type,
+      data: await readBase64(prepared),
+    },
+  });
+  return result.url;
+}
 export const money = (n) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
 export const date = (n) => new Date(n * 1000).toLocaleString('vi-VN');

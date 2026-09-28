@@ -4,6 +4,7 @@ import { Empty, ErrorNotice, Field, Icon, Logo, Modal } from './ui';
 import { QuoteTable } from './Booking';
 import { ContentPanel, PageEditor, PriceEditor, PricingPanel } from './ContentAdmin';
 import HaravanBlogEditor from './HaravanBlogEditor';
+import ImageUpload from './ImageUpload';
 
 const tabs = [
   ['overview', 'grid', 'Tổng quan'],
@@ -205,98 +206,135 @@ function ServiceEditor({ service, mutate, onClose }) {
     }
   }
   return (
-    <Modal wide title={service ? 'Chỉnh sửa dịch vụ' : 'Thêm dịch vụ'} onClose={onClose}>
-      <form className="editor-body" onSubmit={submit}>
-        <div className="form-grid">
-          <Field
-            label="Mã dịch vụ"
-            required
-            pattern="[a-z0-9-]{2,80}"
-            disabled={!!service}
-            value={form.id}
-            onChange={(e) => input('id', e.target.value)}
-          />
-          <Field
-            label="Tên dịch vụ"
-            required
-            minLength={3}
-            value={form.name}
-            onChange={(e) => input('name', e.target.value)}
-          />
-          <Field
-            label="Dòng giới thiệu"
-            value={form.tagline}
-            onChange={(e) => input('tagline', e.target.value)}
-          />
-          <Field
-            label="Ảnh (URL hoặc /images/...)"
-            value={form.image}
-            onChange={(e) => input('image', e.target.value)}
-          />
-        </div>
-        <Field label="Mô tả">
-          <textarea
-            rows={3}
-            value={form.description}
-            onChange={(e) => input('description', e.target.value)}
-          />
-        </Field>
-        <div className="form-grid">
-          <Field
-            label="Đơn giá tham khảo (VND)"
-            type="number"
-            min={0}
-            max={100000000}
-            required
-            value={form.rate}
-            onChange={(e) => input('rate', e.target.value)}
-          />
-          <Field
-            label="Đơn vị tính"
-            required
-            value={form.unit}
-            onChange={(e) => input('unit', e.target.value)}
-          />
-        </div>
-        <Field label="Các dịch vụ con (mỗi dòng một loại)">
-          <textarea rows={4} value={subs} onChange={(e) => setSubs(e.target.value)} required />
-        </Field>
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={form.active}
-            onChange={(e) => input('active', e.target.checked)}
-          />
-          Hiển thị và cho phép đặt dịch vụ
-        </label>
-        <details className="advanced-fields">
-          <summary>Cấu hình biểu mẫu riêng cho dịch vụ</summary>
-          <p>
-            Trường số cần có key, label, type: number, required, min và max. Trường chọn dùng type:
-            select và options. Giữ các trường hệ số sessions, days, distance ở dịch vụ gốc tương
-            ứng.
-          </p>
-          <Field
-            label="Khóa trường khối lượng để tính giá"
-            required
-            value={form.quantityKey}
-            onChange={(e) => input('quantityKey', e.target.value)}
-          />
-          <Field label="Danh sách trường (JSON)">
-            <textarea
-              className="code-input"
-              rows={14}
-              value={fields}
-              onChange={(e) => setFields(e.target.value)}
-            />
-          </Field>
-        </details>
-        <ErrorNotice error={error} />
-        <button className="button primary" disabled={busy}>
-          {busy ? 'Đang lưu...' : 'Lưu dịch vụ'}
+    <div className="haravan-editor-wrapper service-haravan-editor">
+      <div className="haravan-top-breadcrumb">
+        <button type="button" className="breadcrumb-link" onClick={onClose}>
+          Danh sách dịch vụ
         </button>
+        <span className="breadcrumb-separator">&gt;</span>
+        <span className="breadcrumb-current">{form.name || 'Dịch vụ chưa có tên'}</span>
+      </div>
+      <header className="haravan-header-bar">
+        <div className="haravan-header-left">
+          <button type="button" className="haravan-back-btn" onClick={onClose} aria-label="Quay lại">
+            <Icon name="arrow" size={20} style={{ transform: 'rotate(180deg)' }} />
+          </button>
+          <h1 className="haravan-page-title">{service ? form.name : 'Thêm dịch vụ mới'}</h1>
+        </div>
+        <div className="haravan-header-actions">
+          <button type="button" className="haravan-btn haravan-btn-secondary" onClick={onClose}>
+            Hủy
+          </button>
+          <button type="submit" form="service-editor-form" className="haravan-btn haravan-btn-primary" disabled={busy}>
+            {busy ? 'Đang lưu...' : 'Lưu dịch vụ'}
+          </button>
+        </div>
+      </header>
+      <form id="service-editor-form" className="haravan-editor-layout" onSubmit={submit}>
+        <div className="haravan-editor-left">
+          <section className="haravan-card service-editor-card">
+            <h2 className="haravan-card-title">Thông tin dịch vụ</h2>
+            <div className="haravan-card-body">
+              <div className="haravan-field-group">
+                <label className="haravan-label required" htmlFor="service-name">Tên dịch vụ</label>
+                <input id="service-name" className="haravan-input haravan-title-input" required minLength={3} value={form.name} onChange={(e) => input('name', e.target.value)} placeholder="Ví dụ: Dịch vụ vệ sinh công nghiệp" />
+              </div>
+              <div className="haravan-two-col-grid">
+                <div className="haravan-field-group">
+                  <label className="haravan-label required" htmlFor="service-id">Đường dẫn / mã dịch vụ</label>
+                  <input id="service-id" className="haravan-input" required pattern="[a-z0-9-]{2,80}" disabled={!!service} value={form.id} onChange={(e) => input('id', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))} placeholder="ve-sinh-cong-nghiep" />
+                  <small className="haravan-helper-text">Chỉ dùng chữ thường, số và dấu gạch ngang.</small>
+                </div>
+                <div className="haravan-field-group">
+                  <label className="haravan-label" htmlFor="service-icon">Biểu tượng</label>
+                  <select id="service-icon" className="haravan-select" value={form.icon} onChange={(e) => input('icon', e.target.value)}>
+                    {['home', 'users', 'truck', 'tool', 'leaf', 'shield', 'sparkles'].map((icon) => <option key={icon}>{icon}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="haravan-field-group">
+                <label className="haravan-label" htmlFor="service-tagline">Dòng giới thiệu ngắn</label>
+                <input id="service-tagline" className="haravan-input" maxLength={200} value={form.tagline} onChange={(e) => input('tagline', e.target.value)} />
+              </div>
+              <div className="haravan-field-group">
+                <label className="haravan-label" htmlFor="service-description">Mô tả dịch vụ</label>
+                <textarea id="service-description" className="haravan-input" rows={6} maxLength={1500} value={form.description} onChange={(e) => input('description', e.target.value)} />
+              </div>
+            </div>
+          </section>
+
+          <section className="haravan-card service-editor-card">
+            <h2 className="haravan-card-title">Phân loại và giá tham khảo</h2>
+            <div className="haravan-card-body">
+              <div className="haravan-field-group">
+                <label className="haravan-label required" htmlFor="service-subservices">Các dịch vụ con</label>
+                <textarea id="service-subservices" className="haravan-input" rows={7} value={subs} onChange={(e) => setSubs(e.target.value)} required />
+                <small className="haravan-helper-text">Mỗi dòng là một lựa chọn hiển thị cho khách hàng.</small>
+              </div>
+              <div className="haravan-two-col-grid">
+                <div className="haravan-field-group">
+                  <label className="haravan-label required" htmlFor="service-rate">Đơn giá tham khảo (VNĐ)</label>
+                  <input id="service-rate" className="haravan-input" type="number" min={0} max={100000000} required value={form.rate} onChange={(e) => input('rate', e.target.value)} />
+                </div>
+                <div className="haravan-field-group">
+                  <label className="haravan-label required" htmlFor="service-unit">Đơn vị tính</label>
+                  <input id="service-unit" className="haravan-input" required value={form.unit} onChange={(e) => input('unit', e.target.value)} placeholder="lần, giờ, m²..." />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="haravan-card service-editor-card">
+            <details className="service-advanced" open>
+              <summary>Cấu hình biểu mẫu đặt dịch vụ</summary>
+              <div className="haravan-card-body">
+                <p className="haravan-helper-text">Cấu hình nâng cao dưới dạng JSON. Trường khối lượng phải là trường số bắt buộc.</p>
+                <div className="haravan-field-group">
+                  <label className="haravan-label required" htmlFor="service-quantity-key">Khóa trường khối lượng</label>
+                  <input id="service-quantity-key" className="haravan-input" required value={form.quantityKey} onChange={(e) => input('quantityKey', e.target.value)} />
+                </div>
+                <div className="haravan-field-group">
+                  <label className="haravan-label" htmlFor="service-fields">Danh sách trường (JSON)</label>
+                  <textarea id="service-fields" className="haravan-html-textarea code-input" rows={16} value={fields} onChange={(e) => setFields(e.target.value)} spellCheck={false} />
+                </div>
+              </div>
+            </details>
+          </section>
+          <ErrorNotice error={error} />
+        </div>
+
+        <div className="haravan-editor-right">
+          <section className="haravan-card">
+            <h2 className="haravan-card-title">Hiển thị</h2>
+            <div className="haravan-card-body">
+              <label className="haravan-radio-label">
+                <input type="radio" name="service-visibility" checked={form.active} onChange={() => input('active', true)} />
+                <span>Hiển thị và cho phép đặt dịch vụ</span>
+              </label>
+              <label className="haravan-radio-label">
+                <input type="radio" name="service-visibility" checked={!form.active} onChange={() => input('active', false)} />
+                <span>Ẩn khỏi website</span>
+              </label>
+            </div>
+          </section>
+          <section className="haravan-card">
+            <h2 className="haravan-card-title">Hình đại diện</h2>
+            <div className="haravan-card-body">
+              <ImageUpload label="Ảnh dịch vụ" value={form.image} onChange={(value) => input('image', value)} compact />
+            </div>
+          </section>
+          <section className="haravan-card service-summary-card">
+            <h2 className="haravan-card-title">Xem nhanh</h2>
+            <div className="haravan-card-body">
+              <span className={`status ${form.active ? 'confirmed' : 'cancelled'}`}>{form.active ? 'Đang hiển thị' : 'Đang ẩn'}</span>
+              <strong>{form.name || 'Dịch vụ mới'}</strong>
+              <p>{form.tagline || 'Thông tin giới thiệu sẽ hiển thị tại đây.'}</p>
+              <small>{subs.split('\n').filter(Boolean).length} dịch vụ con · {money(Number(form.rate))}/{form.unit || 'đơn vị'}</small>
+            </div>
+          </section>
+        </div>
       </form>
-    </Modal>
+    </div>
   );
 }
 
@@ -524,7 +562,12 @@ function Settings({ data, mutate }) {
         {field('bank_name', 'Tên ngân hàng')}
         {field('bank_account', 'Số tài khoản')}
         {field('bank_owner', 'Tên chủ tài khoản')}
-        {field('qr_image', 'Ảnh QR (URL HTTPS hoặc /images/...)')}
+        <ImageUpload
+          label="Ảnh QR thanh toán"
+          value={form.qr_image}
+          onChange={(value) => input('qr_image', value)}
+          compact
+        />
       </div>
       <div className="info-box">
         <Icon name="qr" />
@@ -726,7 +769,7 @@ export default function Admin({ user, logout, onUpdate }) {
         </div>
       </aside>
       <div className="admin-main">
-        {!(tab === 'blogs' && edit?.type === 'blog') && (
+        {!((tab === 'blogs' && edit?.type === 'blog') || (tab === 'services' && edit?.type === 'service')) && (
           <header className="admin-header">
             <div>
               <span className="eyebrow">ĐẤT PHƯƠNG NAM</span>
@@ -968,6 +1011,9 @@ export default function Admin({ user, logout, onUpdate }) {
                 </>
               )}
               {tab === 'services' && (
+                edit?.type === 'service' ? (
+                  <ServiceEditor service={edit.value} mutate={mutate} onClose={closeEdit} />
+                ) : (
                 <>
                   <div className="panel-heading">
                     <p>Quản lý danh mục, đơn giá và biểu mẫu theo từng dịch vụ.</p>
@@ -1001,6 +1047,7 @@ export default function Admin({ user, logout, onUpdate }) {
                     ))}
                   </div>
                 </>
+                )
               )}
               {tab === 'blogs' && (
                 edit?.type === 'blog' ? (
@@ -1385,9 +1432,6 @@ export default function Admin({ user, logout, onUpdate }) {
           mutate={mutate}
           onClose={closeEdit}
         />
-      )}
-      {edit?.type === 'service' && (
-        <ServiceEditor service={edit.value} mutate={mutate} onClose={closeEdit} />
       )}
       {edit?.type === 'feedback' && (
         <FeedbackEditor item={edit.value} mutate={mutate} onClose={closeEdit} />

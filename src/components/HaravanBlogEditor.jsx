@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Icon, Modal } from './ui';
+import { uploadImage } from '../lib/api';
+import ImageUpload from './ImageUpload';
 import './HaravanBlogEditor.css';
 
 // Utility to convert Vietnamese titles to URL-friendly slugs
@@ -89,6 +91,7 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [contentImageBusy, setContentImageBusy] = useState(false);
 
   const visualEditorRef = useRef(null);
 
@@ -162,6 +165,23 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
   const insertImagePrompt = () => {
     const url = window.prompt('Nhập đường dẫn hình ảnh (URL):', 'https://');
     if (url) executeCmd('insertImage', url);
+  };
+
+  const uploadContentImage = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setContentImageBusy(true);
+    setError('');
+    try {
+      const url = await uploadImage(file);
+      const alt = file.name.replace(/\.[^.]+$/, '');
+      updateField('body', `${form.body}<p><img src="${url}" alt="${alt}" style="max-width:100%;height:auto;"></p><p><br></p>`);
+    } catch (err) {
+      setError(err.message || 'Không thể tải ảnh vào bài viết.');
+    } finally {
+      setContentImageBusy(false);
+    }
   };
 
   const insertVideoPrompt = () => {
@@ -394,8 +414,9 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
           {/* Card 1: Article Content */}
           <section className="haravan-card">
             <div className="haravan-field-group">
-              <label className="haravan-label required">Tiêu đề</label>
+              <label className="haravan-label required" htmlFor="blog-title">Tiêu đề</label>
               <input
+                id="blog-title"
                 type="text"
                 className="haravan-input haravan-title-input"
                 placeholder="Nhập tiêu đề bài viết..."
@@ -660,12 +681,16 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
                   <button
                     type="button"
                     className="toolbar-btn"
-                    title="Chèn hình ảnh vào nội dung"
+                    title="Chèn hình ảnh bằng URL"
                     onClick={insertImagePrompt}
                     disabled={isHtmlMode}
                   >
                     🖼
                   </button>
+                  <label className={`toolbar-btn toolbar-upload-btn ${contentImageBusy ? 'is-busy' : ''}`} title="Tải ảnh từ máy vào nội dung">
+                    <Icon name="upload" size={15} />
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={uploadContentImage} disabled={contentImageBusy} />
+                  </label>
                   <button
                     type="button"
                     className="toolbar-btn"
@@ -766,6 +791,8 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
                   Trích dẫn tóm tắt bài viết sẽ được hiển thị trên trang danh sách tin tức và chia sẻ mạng xã hội.
                 </p>
                 <textarea
+                  id="blog-excerpt"
+                  aria-label="Tóm tắt bài viết"
                   className="haravan-textarea"
                   rows={3}
                   maxLength={500}
@@ -1070,12 +1097,12 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
             <p className="haravan-helper-text">
               Nhập liên kết URL của hình ảnh hoặc chọn từ các hình có sẵn:
             </p>
-            <input
-              type="text"
-              className="haravan-input"
+            <ImageUpload
+              label="Ảnh đại diện"
               value={tempImageUrl}
-              onChange={(e) => setTempImageUrl(e.target.value)}
-              placeholder="https://... hoặc /images/hero.jpg"
+              onChange={setTempImageUrl}
+              help="Tải ảnh mới từ máy hoặc dán URL ảnh có sẵn."
+              compact
             />
             <div className="sample-images-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginTop: '14px' }}>
               {[

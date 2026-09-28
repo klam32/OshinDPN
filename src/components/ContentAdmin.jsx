@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { money } from '../lib/api';
 import { ErrorNotice, Field, Modal } from './ui';
+import ImageUpload from './ImageUpload';
 
 export function PageEditor({ page, mutate, onClose }) {
   const { id, ...initial } = page;
@@ -52,10 +53,10 @@ export function PageEditor({ page, mutate, onClose }) {
             onChange={(e) => input('excerpt', e.target.value)}
           />
         </Field>
-        <Field
+        <ImageUpload
           label="Ảnh minh họa"
           value={form.image}
-          onChange={(e) => input('image', e.target.value)}
+          onChange={(value) => input('image', value)}
         />
         <Field label="Nội dung (ngắt đoạn bằng một dòng trống)">
           <textarea

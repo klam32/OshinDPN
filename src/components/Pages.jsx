@@ -636,8 +636,8 @@ export function ContactPage({ settings, user, openChat, openBooking }) {
   );
 }
 
-export function NewsPage({ blogs, category = '' }) {
-  const [query, setQuery] = useState(''),
+export function NewsPage({ blogs, category = '', initialQuery = '' }) {
+  const [query, setQuery] = useState(initialQuery),
     [page, setPage] = useState(1);
   const categories = [...new Set([...company.categories, ...blogs.map((b) => b.category)])];
   const filtered = [...blogs]
@@ -755,45 +755,85 @@ export function NewsPage({ blogs, category = '' }) {
 }
 
 export function ArticlePage({ article, blogs, openBooking }) {
+  const latest = [...blogs]
+    .filter((b) => b.id !== article.id)
+    .sort((a, b) => b.created - a.created);
+  const related = [...latest]
+    .sort(
+      (a, b) => Number(b.category === article.category) - Number(a.category === article.category),
+    )
+    .slice(0, 5);
+  const categories = [...new Set([...company.categories, ...blogs.map((b) => b.category)])];
+  const tags = Array.isArray(article.tags) ? article.tags : [];
   return (
     <main>
-      <PageBanner title={article.title} parent={{ title: 'Tin tức', href: '#/tin-tuc' }} />
-      <div className="container article-page">
-        <article>
-          <a className="eyebrow" href={categoryHref(article.category)}>
-            {article.category}
-          </a>
-          <h2>{article.title}</h2>
-          <p className="muted">Đăng ngày {shortDate(article.created)} · Đất Phương Nam</p>
-          <p className="page-lead">{article.excerpt}</p>
-          <img className="article-cover" src={article.image} alt={article.title} />
+      <PageBanner title={article.category || 'Tin mới'} parent={{ title: 'Tin tức', href: '#/tin-tuc' }} />
+      <div className="container article-page article-reference-layout">
+        <article className="article-reference-content">
+          <h1>{article.title}</h1>
+          <p className="article-meta">
+            Người viết: <strong>{article.author || 'Đất Phương Nam'}</strong> lúc{' '}
+            <time dateTime={new Date(article.created * 1000).toISOString()}>{shortDate(article.created)}</time>
+            <a href={categoryHref(article.category)}>{article.category}</a>
+          </p>
+          {article.excerpt && <p className="article-intro">{article.excerpt}</p>}
+          <img className="article-cover" src={article.image} alt={article.imageAlt || article.title} />
           <TextBody body={article.body} />
-          <div className="page-cta">
-            <h3>Bạn muốn được tư vấn thêm?</h3>
-            <p>Đội ngũ Đất Phương Nam sẽ giúp bạn xác định nhu cầu và phương án thực hiện.</p>
-            <button className="button yellow" onClick={() => openBooking()}>
-              Gửi yêu cầu dịch vụ
+          <div className="article-contact-box">
+            <h2>Liên hệ ngay để nhận tư vấn</h2>
+            <strong>CÔNG TY DỊCH VỤ OSHIN THỜI ĐẠI – ĐẤT PHƯƠNG NAM</strong>
+            <p>Đội ngũ Đất Phương Nam sẵn sàng tư vấn nhu cầu, khảo sát và xây dựng phương án phù hợp.</p>
+            <button className="button primary" onClick={() => openBooking()}>
+              Gửi yêu cầu dịch vụ <Icon name="arrow" size={16} />
             </button>
           </div>
+          {!!tags.length && (
+            <div className="article-tags">
+              <b>Tags:</b>
+              {tags.map((tag) => <a key={tag} href={`#/tin-tuc?tu-khoa=${encodeURIComponent(tag)}`}>{tag}</a>)}
+            </div>
+          )}
+          <div className="article-next-link">
+            {latest[0] && <a href={blogHref(latest[0].id)}>Bài sau <Icon name="chevron" size={14} /></a>}
+          </div>
         </article>
-        <aside className="page-directory">
-          <h2>Đọc thêm</h2>
-          {blogs
-            .filter((b) => b.id !== article.id)
-            .sort(
-              (a, b) =>
-                Number(b.category === article.category) - Number(a.category === article.category),
-            )
-            .slice(0, 5)
-            .map((b) => (
-              <a key={b.id} href={blogHref(b.id)}>
-                {b.title}
-                <Icon name="chevron" size={14} />
-              </a>
+        <aside className="article-sidebar">
+          <section>
+            <h2>Bài viết mới nhất</h2>
+            <ol>
+              {latest.slice(0, 6).map((b) => (
+                <li key={b.id}>
+                  <span>{String(latest.indexOf(b) + 1).padStart(2, '0')}</span>
+                  <a href={blogHref(b.id)}><small>{b.category}</small>{b.title}</a>
+                </li>
+              ))}
+            </ol>
+          </section>
+          <section className="article-category-list">
+            <h2>Danh mục blog</h2>
+            <a href="#/tin-tuc">Trang chủ tin tức <span>+</span></a>
+            {categories.map((category) => (
+              <a key={category} href={categoryHref(category)}>{category}<span>+</span></a>
             ))}
-          <a href="#/tin-tuc">Tất cả tin tức</a>
+          </section>
         </aside>
       </div>
+      {!!related.length && (
+        <section className="container article-related">
+          <h2>Bài viết cùng chuyên mục</h2>
+          <div className="article-related-grid">
+            {related.map((b) => (
+              <article key={b.id}>
+                <a href={blogHref(b.id)} className="article-related-image"><img src={b.image} alt="" loading="lazy" /></a>
+                <h3><a href={blogHref(b.id)}>{b.title}</a></h3>
+                <p className="article-related-meta">{shortDate(b.created)} · NGƯỜI VIẾT: {String(b.author || 'Đất Phương Nam').toUpperCase()}</p>
+                <p>{b.excerpt}</p>
+                <a className="article-read-more" href={blogHref(b.id)}>Đọc thêm <Icon name="arrow" size={14} /></a>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

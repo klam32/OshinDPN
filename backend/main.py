@@ -15,7 +15,7 @@ from urllib.parse import urlencode, urlparse
 import httpx
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, Response
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response as FastAPIResponse
 from fastapi.staticfiles import StaticFiles
 from google.auth.exceptions import GoogleAuthError
 from google.auth.transport.requests import Request as GoogleAuthRequest
@@ -149,6 +149,8 @@ def health(): return {'status': 'ok'}
 def bootstrap():
     with connect() as c:
         blogs = [dict(r) for r in c.execute('SELECT * FROM blogs WHERE published=1 ORDER BY created DESC')]
+        metadata = {r['id']: json.loads(r['data']) for r in c.execute('SELECT id,data FROM blog_meta')}
+    blogs = [{**blog, **metadata.get(blog['id'], {})} for blog in blogs]
     return {'services': services(True), 'settings': settings(), 'blogs': blogs, 'pages': pages(), 'pricing': pricing(), 'admin_online': admin_online(), 'ai_ready': ai_ready()}
 
 @app.get('/api/auth/me')
@@ -578,7 +580,9 @@ def dashboard(person=Depends(admin)):
         feedbacks = [{**dict(r), 'data': json.loads(r['data'])} for r in c.execute('SELECT * FROM feedback ORDER BY created DESC')]
         users = [dict(r) for r in c.execute('SELECT id,name,email,role,active,created FROM users ORDER BY created DESC')]
         blogs = [dict(r) for r in c.execute('SELECT * FROM blogs ORDER BY created DESC')]
+        metadata = {r['id']: json.loads(r['data']) for r in c.execute('SELECT id,data FROM blog_meta')}
         outbox = [dict(r) for r in c.execute('SELECT * FROM outbox ORDER BY created DESC')]
+    blogs = [{**blog, **metadata.get(blog['id'], {})} for blog in blogs]
     return {'orders': all_orders, 'chats': chats, 'feedback': feedbacks, 'users': users, 'services': services(), 'blogs': blogs, 'pages': pages(False), 'pricing': pricing(False), 'settings': settings(), 'outbox': outbox, 'integrations': {'ai': ai_ready(), 'smtp': bool(os.getenv('SMTP_HOST') and os.getenv('SMTP_FROM'))}}
 
 class StatusInput(StrictModel):
@@ -739,6 +743,7 @@ class BlogInput(BaseModel):
     excerpt: str = Field(default='', max_length=1000)
     body: str = Field(min_length=1, max_length=50000)
     image: str = Field(default='', max_length=500)
+    imageAlt: str = Field(default='', max_length=250)
     published: bool = True
     author: str = Field(default='Khoa Lam', max_length=100)
     tags: list[str] = Field(default_factory=list)
@@ -749,13 +754,78 @@ class BlogInput(BaseModel):
 @app.put('/api/admin/blogs/{identifier}')
 def save_blog(identifier: str, data: BlogInput, person=Depends(admin)):
     if not re.fullmatch(r'[a-zA-Z0-9-]{1,80}', identifier): raise HTTPException(422, 'Mã bài viết không hợp lệ.')
-    with connect() as c: c.execute('INSERT INTO blogs VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,category=excluded.category,excerpt=excluded.excerpt,body=excluded.body,image=excluded.image,published=excluded.published', (identifier, data.title, data.category, data.excerpt or data.title[:150], data.body, data.image or '/images/hero.jpg', 1 if data.published else 0, time.time()))
+    with connect() as c:
+        c.execute('INSERT INTO blogs VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,category=excluded.category,excerpt=excluded.excerpt,body=excluded.body,image=excluded.image,published=excluded.published', (identifier, data.title, data.category, data.excerpt or data.title[:150], data.body, data.image or '/images/hero.jpg', 1 if data.published else 0, time.time()))
+        metadata = {
+            'author': data.author or 'Khoa Lam',
+            'imageAlt': data.imageAlt or data.title,
+            'tags': data.tags[:30],
+            'seo_title': data.seo_title,
+            'seo_description': data.seo_description,
+            'template': data.template,
+        }
+        c.execute('INSERT INTO blog_meta VALUES(?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data', (identifier, dump(metadata)))
     return {'ok': True}
 
 @app.delete('/api/admin/blogs/{identifier}')
 def delete_blog(identifier: str, person=Depends(admin)):
-    with connect() as c: c.execute('DELETE FROM blogs WHERE id=?', (identifier,))
+    with connect() as c:
+        c.execute('DELETE FROM blog_meta WHERE id=?', (identifier,))
+        c.execute('DELETE FROM blogs WHERE id=?', (identifier,))
     return {'ok': True}
+
+
+class ImageUploadInput(StrictModel):
+    filename: str = Field(min_length=1, max_length=180)
+    mime: Literal['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    data: str = Field(min_length=8, max_length=4000000)
+
+
+def _valid_image_signature(raw: bytes, mime: str):
+    signatures = {
+        'image/jpeg': raw.startswith(b'\xff\xd8\xff'),
+        'image/png': raw.startswith(b'\x89PNG\r\n\x1a\n'),
+        'image/webp': len(raw) >= 12 and raw[:4] == b'RIFF' and raw[8:12] == b'WEBP',
+        'image/gif': raw.startswith((b'GIF87a', b'GIF89a')),
+    }
+    return signatures.get(mime, False)
+
+
+@app.post('/api/admin/uploads')
+def upload_image(data: ImageUploadInput, person=Depends(admin)):
+    try:
+        raw = base64.b64decode(data.data, validate=True)
+    except (ValueError, TypeError):
+        raise HTTPException(422, 'Dữ liệu ảnh không hợp lệ.')
+    if not raw or len(raw) > 2800000:
+        raise HTTPException(422, 'Ảnh tải lên tối đa 2,8 MB.')
+    if not _valid_image_signature(raw, data.mime):
+        raise HTTPException(422, 'Tệp tải lên không đúng định dạng ảnh đã chọn.')
+    extension = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif'}[data.mime]
+    identifier = f"{int(time.time())}-{secrets.token_hex(8)}.{extension}"
+    safe_name = re.sub(r'[^a-zA-Z0-9._ -]', '_', data.filename).strip() or f'image.{extension}'
+    with connect() as c:
+        c.execute('INSERT INTO media_files VALUES(?,?,?,?,?)', (identifier, safe_name, data.mime, data.data, time.time()))
+    return {'ok': True, 'url': f'/api/media/{identifier}', 'filename': safe_name}
+
+
+@app.get('/api/media/{identifier}')
+def media_file(identifier: str):
+    if not re.fullmatch(r'[0-9]+-[a-f0-9]{16}\.(jpg|png|webp|gif)', identifier):
+        raise HTTPException(404, 'Không tìm thấy ảnh.')
+    with connect() as c:
+        row = c.execute('SELECT mime,data FROM media_files WHERE id=?', (identifier,)).fetchone()
+    if not row:
+        raise HTTPException(404, 'Không tìm thấy ảnh.')
+    try:
+        raw = base64.b64decode(row['data'], validate=True)
+    except (ValueError, TypeError):
+        raise HTTPException(404, 'Ảnh không còn khả dụng.')
+    return FastAPIResponse(
+        content=raw,
+        media_type=row['mime'],
+        headers={'Cache-Control': 'public, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff'},
+    )
 
 class SettingsInput(StrictModel):
     company_name: str = Field(min_length=5, max_length=150)
@@ -780,7 +850,7 @@ class SettingsInput(StrictModel):
     @field_validator('qr_image')
     @classmethod
     def validate_image(cls, v):
-        if v and not (v.startswith('https://') or (v.startswith('/images/') and '..' not in v)): raise ValueError('QR phải là URL HTTPS hoặc đường dẫn /images/')
+        if v and not (v.startswith('https://') or ((v.startswith('/images/') or v.startswith('/api/media/')) and '..' not in v)): raise ValueError('QR phải là URL HTTPS hoặc ảnh đã tải lên.')
         return v
 
 @app.put('/api/admin/settings')
@@ -799,11 +869,18 @@ class PageInput(BaseModel):
     source_url: str = Field(default='', max_length=500)
     published: bool
 
-    @field_validator('image', 'source_url')
+    @field_validator('image')
     @classmethod
-    def safe_url(cls, value):
-        if value and not (value.startswith('https://') or (value.startswith('/images/') and '..' not in value)):
-            raise ValueError('Dùng đường dẫn HTTPS hoặc /images/.')
+    def safe_image(cls, value):
+        if value and not (value.startswith('https://') or ((value.startswith('/images/') or value.startswith('/api/media/')) and '..' not in value)):
+            raise ValueError('Dùng đường dẫn HTTPS hoặc ảnh đã tải lên.')
+        return value
+
+    @field_validator('source_url')
+    @classmethod
+    def safe_source_url(cls, value):
+        if value and not value.startswith('https://'):
+            raise ValueError('Đường dẫn nguồn phải dùng HTTPS.')
         return value
 
 

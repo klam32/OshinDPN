@@ -447,6 +447,48 @@
 .toolbar-btn.text-underline { text-decoration: underline; }
 .toolbar-btn.text-strike { text-decoration: line-through; }
 
+.toolbar-upload-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.toolbar-upload-btn input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.toolbar-upload-btn.is-busy {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.service-editor-card .haravan-field-group + .haravan-field-group,
+.service-editor-card .haravan-two-col-grid + .haravan-field-group,
+.service-editor-card .haravan-field-group + .haravan-two-col-grid {
+  margin-top: 20px;
+}
+
+.service-advanced > summary {
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  color: #212b36;
+}
+
+.service-summary-card strong {
+  display: block;
+  margin: 16px 0 8px;
+  font-size: 16px;
+}
+
+.service-summary-card p,
+.service-summary-card small {
+  color: #637381;
+  line-height: 1.6;
+}
+
 .toolbar-select {
   height: 28px;
   border: 1px solid #c4cdd5;

@@ -79,3 +79,16 @@ test('Menu điện thoại mở từng cấp, đóng sau lựa chọn và không
   await page.getByRole('button', { name: 'Đóng thông báo đầu trang', exact: true }).click();
   await expect(page.locator('.reference-topbar')).toHaveCount(0);
 });
+
+test('Trang bài viết có sidebar, bài liên quan và footer hoàn chỉnh trên mọi màn hình', async ({ page }) => {
+  await page.goto('/#/bai-viet/clean-home');
+  await expect(page.locator('.article-reference-content h1')).toContainText(/một ngôi nhà sạch/i);
+  await expect(page.getByRole('heading', { name: 'Bài viết mới nhất' })).toBeVisible();
+  await expect(page.locator('.article-related-grid article')).not.toHaveCount(0);
+  await expect(page.locator('.footer-top > div')).toHaveCount(4);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  await expect(page.locator('.article-sidebar')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
