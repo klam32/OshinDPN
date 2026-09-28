@@ -92,3 +92,19 @@ test('Trang bài viết có sidebar, bài liên quan và footer hoàn chỉnh tr
   await expect(page.locator('.article-sidebar')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test('Footer mở đủ chính sách, bốn liên hệ nhanh và nút lên đầu không che khẩu hiệu', async ({ page }) => {
+  await page.goto('/#/chinh-sach-bao-mat');
+  await expect(page.getByRole('heading', { name: 'Chính sách bảo mật', exact: true }).last()).toBeVisible();
+  await expect(page.locator('.policy-article')).toContainText('Thông tin Cá nhân Chúng tôi Thu thập');
+  await expect(page.locator('.quick-contact-rail a')).toHaveCount(4);
+  await expect(page.locator('.footer-policy a[href="#/chinh-sach-bao-mat"]')).toBeVisible();
+  await expect(page.locator('.footer-policy a[href="#/chinh-sach-doi-tra"]')).toBeVisible();
+  await expect(page.locator('.footer-policy a[href="#/dieu-khoan-dich-vu"]')).toBeVisible();
+  const overlap = await page.evaluate(() => {
+    const button = document.querySelector('.footer-back-top')?.getBoundingClientRect();
+    const slogan = document.querySelector('.footer-bottom span:last-child')?.getBoundingClientRect();
+    return !!button && !!slogan && !(button.right < slogan.left || button.left > slogan.right || button.bottom < slogan.top || button.top > slogan.bottom);
+  });
+  expect(overlap).toBe(false);
+});

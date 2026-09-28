@@ -922,3 +922,87 @@
   border-radius: 4px;
   font-size: 12px;
 }
+
+/* Haravan-style editor dialogs (replaces browser prompt/alert UI) */
+.haravan-dialog-body {
+  color: #212b36;
+}
+
+.haravan-dialog-tabs {
+  display: flex;
+  border-bottom: 1px solid #dfe3e8;
+  margin: -2px -24px 22px;
+  padding-left: 24px;
+}
+
+.haravan-dialog-tabs button {
+  min-width: 142px;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  margin-bottom: -1px;
+  color: #454f5b;
+  font-size: 13px;
+}
+
+.haravan-dialog-tabs button.active {
+  background: #fff;
+  border-color: #dfe3e8;
+  color: #212b36;
+  font-weight: 600;
+}
+
+.haravan-dialog-fields {
+  display: grid;
+  gap: 18px;
+}
+
+.haravan-dialog-fields label > span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+
+.haravan-dialog-fields .haravan-select {
+  min-width: 172px;
+}
+
+.haravan-link-url-row {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+}
+
+.haravan-link-value {
+  flex: 1;
+}
+
+.haravan-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #dfe3e8;
+  margin: 24px -24px -20px;
+  padding: 14px 24px;
+  background: #fafbfc;
+}
+
+.haravan-confirm-btn {
+  background: #108043;
+  border-color: #0d6f3a;
+}
+
+.haravan-confirm-btn:hover:not(:disabled) {
+  background: #087331;
+}
+
+@media (max-width: 600px) {
+  .haravan-link-url-row {
+    display: grid;
+  }
+  .haravan-dialog-tabs button {
+    min-width: 0;
+    flex: 1;
+  }
+}

@@ -12,7 +12,7 @@ const tabs = [
   ['chat', 'chat', 'Tư vấn trực tiếp'],
   ['services', 'home', 'Quản lý dịch vụ'],
   ['blogs', 'file', 'Bài viết & Blog'],
-  ['pages', 'file', 'Trang giới thiệu'],
+  ['pages', 'file', 'Trang nội dung & chính sách'],
   ['pricing', 'file', 'Bảng giá công khai'],
   ['users', 'users', 'Tài khoản'],
   ['feedback', 'report', 'Phản hồi & báo lỗi'],
@@ -546,6 +546,35 @@ function Settings({ data, mutate }) {
           onChange={(e) => input('hero_description', e.target.value)}
         />
       </Field>
+      <h3>4 nút liên hệ nhanh trên website</h3>
+      <label className="checkbox-label">
+        <input
+          type="checkbox"
+          checked={form.quick_contacts_enabled ?? true}
+          onChange={(e) => input('quick_contacts_enabled', e.target.checked)}
+        />
+        Hiển thị cụm nút liên hệ nhanh
+      </label>
+      <div className="quick-contact-settings">
+        {[
+          ['quick_phone_enabled', 'Điện thoại', 'quick_phone', 'Số điện thoại'],
+          ['quick_messenger_enabled', 'Messenger', 'quick_messenger_url', 'Liên kết Messenger'],
+          ['quick_email_enabled', 'Email', 'quick_email', 'Email liên hệ'],
+          ['quick_contact_enabled', 'Liên hệ / Bản đồ', 'quick_contact_url', 'Liên kết trang liên hệ'],
+        ].map(([enabledKey, title, valueKey, label]) => (
+          <div className="quick-contact-setting" key={enabledKey}>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={form[enabledKey] ?? true}
+                onChange={(e) => input(enabledKey, e.target.checked)}
+              />
+              {title}
+            </label>
+            {field(valueKey, label, valueKey === 'quick_email' ? 'email' : 'text')}
+          </div>
+        ))}
+      </div>
       <h3>Báo giá & thanh toán</h3>
       <div className="form-grid">
         {field('tax_percent', 'Thuế áp dụng trong chiết tính (%)', 'number')}
@@ -1274,15 +1303,7 @@ export default function Admin({ user, logout, onUpdate }) {
                                     }}
                                     disabled={u.id === user.id}
                                     title={u.id === user.id ? 'Không thể xóa chính tài khoản bạn đang đăng nhập' : `Xóa tài khoản ${u.email}`}
-                                    onClick={() => {
-                                      if (
-                                        window.confirm(
-                                          `Bạn có chắc chắn muốn xóa tài khoản "${u.email}" (${u.name})? Thao tác này sẽ xóa vĩnh viễn tài khoản và không thể hoàn tác.`
-                                        )
-                                      ) {
-                                        action(`/admin/users/${u.id}`, 'DELETE');
-                                      }
-                                    }}
+                                    onClick={() => setEdit({ type: 'deleteUser', value: u })}
                                   >
                                     <Icon name="trash" size={13} /> Xóa
                                   </button>
@@ -1456,6 +1477,34 @@ export default function Admin({ user, logout, onUpdate }) {
             >
               Xóa bài viết
             </button>
+          </div>
+        </Modal>
+      )}
+      {edit?.type === 'deleteUser' && (
+        <Modal title="Xóa tài khoản" onClose={closeEdit}>
+          <div className="editor-body haravan-confirm-dialog">
+            <span className="confirm-dialog-icon"><Icon name="report" size={28} /></span>
+            <h3>Xác nhận xóa tài khoản?</h3>
+            <p>
+              Tài khoản <strong>{edit.value.email}</strong> ({edit.value.name}) sẽ bị xóa vĩnh viễn
+              và không thể hoàn tác.
+            </p>
+            <div className="modal-actions">
+              <button className="button light" onClick={closeEdit}>Bỏ qua</button>
+              <button
+                className="button danger"
+                onClick={async () => {
+                  try {
+                    await action(`/admin/users/${edit.value.id}`, 'DELETE');
+                    closeEdit();
+                  } catch (e) {
+                    setError(e.message);
+                  }
+                }}
+              >
+                Xóa tài khoản
+              </button>
+            </div>
           </div>
         </Modal>
       )}

@@ -56,6 +56,14 @@ const POPULAR_TAGS = [
   'DonDepVanPhong',
 ];
 
+const escapeHtml = (value) =>
+  String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+
 export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
   const initialTitle = blog?.title || '';
   const initialSlug = blog?.id || toSlug(initialTitle) || 'bai-viet-moi';
@@ -88,12 +96,21 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
   const [tempImageUrl, setTempImageUrl] = useState('');
   const [showAltDialog, setShowAltDialog] = useState(false);
   const [tempAlt, setTempAlt] = useState('');
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [linkTab, setLinkTab] = useState('info');
+  const [linkForm, setLinkForm] = useState({ text: '', type: 'url', protocol: 'https://', value: '', target: '_self', title: '' });
+  const [mediaDialog, setMediaDialog] = useState('');
+  const [mediaUrl, setMediaUrl] = useState('');
+  const [mediaAlt, setMediaAlt] = useState('');
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [scheduleValue, setScheduleValue] = useState(new Date().toISOString().slice(0, 16));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [contentImageBusy, setContentImageBusy] = useState(false);
 
   const visualEditorRef = useRef(null);
+  const savedSelectionRef = useRef(null);
 
   // Sync body to contentEditable div when switching or initializing
   useEffect(() => {
@@ -157,14 +174,71 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
     }
   };
 
-  const insertLinkPrompt = () => {
-    const url = window.prompt('Nhập địa chỉ liên kết (URL):', 'https://');
-    if (url) executeCmd('createLink', url);
+  const rememberSelection = () => {
+    const selection = window.getSelection();
+    if (!selection?.rangeCount || !visualEditorRef.current) {
+      savedSelectionRef.current = null;
+      return;
+    }
+    const range = selection.getRangeAt(0);
+    const node = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+      ? range.commonAncestorContainer.parentNode
+      : range.commonAncestorContainer;
+    savedSelectionRef.current = visualEditorRef.current.contains(node) ? range.cloneRange() : null;
   };
 
-  const insertImagePrompt = () => {
-    const url = window.prompt('Nhập đường dẫn hình ảnh (URL):', 'https://');
-    if (url) executeCmd('insertImage', url);
+  const insertEditorHtml = (html) => {
+    if (!visualEditorRef.current) return;
+    visualEditorRef.current.focus();
+    const selection = window.getSelection();
+    if (savedSelectionRef.current && selection) {
+      selection.removeAllRanges();
+      selection.addRange(savedSelectionRef.current);
+    } else if (selection) {
+      const range = document.createRange();
+      range.selectNodeContents(visualEditorRef.current);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    document.execCommand('insertHTML', false, html);
+    updateField('body', visualEditorRef.current.innerHTML);
+    savedSelectionRef.current = null;
+  };
+
+  const openLinkDialog = () => {
+    rememberSelection();
+    setLinkForm({
+      text: window.getSelection()?.toString() || '',
+      type: 'url',
+      protocol: 'https://',
+      value: '',
+      target: '_self',
+      title: '',
+    });
+    setLinkTab('info');
+    setShowLinkDialog(true);
+  };
+
+  const confirmLink = () => {
+    const raw = linkForm.value.trim();
+    if (!raw) return;
+    let href = raw;
+    if (linkForm.type === 'email') href = `mailto:${raw.replace(/^mailto:/i, '')}`;
+    else if (linkForm.type === 'phone') href = `tel:${raw.replace(/^tel:/i, '')}`;
+    else if (!/^(https?:\/\/|#\/|\/)/i.test(raw)) href = `${linkForm.protocol}${raw}`;
+    const text = linkForm.text.trim() || raw;
+    const target = linkForm.target === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : '';
+    const title = linkForm.title.trim() ? ` title="${escapeHtml(linkForm.title.trim())}"` : '';
+    insertEditorHtml(`<a href="${escapeHtml(href)}"${target}${title}>${escapeHtml(text)}</a>`);
+    setShowLinkDialog(false);
+  };
+
+  const openMediaDialog = (type) => {
+    rememberSelection();
+    setMediaDialog(type);
+    setMediaUrl(type === 'video' ? 'https://www.youtube.com/watch?v=' : 'https://');
+    setMediaAlt('');
   };
 
   const uploadContentImage = async (event) => {
@@ -184,20 +258,17 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
     }
   };
 
-  const insertVideoPrompt = () => {
-    const url = window.prompt('Nhập liên kết video YouTube:', 'https://www.youtube.com/watch?v=...');
-    if (url) {
-      let embedUrl = url;
-      const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-      if (match) {
-        embedUrl = `https://www.youtube.com/embed/${match[1]}`;
-      }
-      const iframeHtml = `<div class="embedded-video-wrapper" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;margin:16px 0;"><iframe src="${embedUrl}" frameborder="0" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;"></iframe></div><p><br></p>`;
-      document.execCommand('insertHTML', false, iframeHtml);
-      if (visualEditorRef.current) {
-        updateField('body', visualEditorRef.current.innerHTML);
-      }
+  const confirmMedia = () => {
+    if (!mediaUrl.trim()) return;
+    if (mediaDialog === 'image') {
+      insertEditorHtml(`<p><img src="${escapeHtml(mediaUrl.trim())}" alt="${escapeHtml(mediaAlt.trim())}" style="max-width:100%;height:auto;"></p><p><br></p>`);
+    } else {
+      let embedUrl = mediaUrl.trim();
+      const match = embedUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+      if (match) embedUrl = `https://www.youtube.com/embed/${match[1]}`;
+      insertEditorHtml(`<div class="embedded-video-wrapper" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;margin:16px 0;"><iframe src="${escapeHtml(embedUrl)}" frameborder="0" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;"></iframe></div><p><br></p>`);
     }
+    setMediaDialog('');
   };
 
   const insertTablePrompt = () => {
@@ -262,8 +333,8 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
 
       const identifier = blog?.id || cleanSlug;
       await mutate(`/admin/blogs/${identifier}`, 'PUT', payload);
-      setSavedSuccess(true);
-      setTimeout(() => setSavedSuccess(false), 3500);
+      setSuccessMessage('Bài viết đã được lưu thành công vào hệ thống!');
+      setTimeout(() => setSuccessMessage(''), 3500);
     } catch (err) {
       setError(err.message || 'Lỗi khi lưu bài viết.');
     } finally {
@@ -344,7 +415,8 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
                   onClick={() => {
                     setShowActionsMenu(false);
                     navigator.clipboard?.writeText(window.location.origin + `/#/bai-viet/${encodeURIComponent(displaySlug)}`);
-                    alert('Đã sao chép liên kết bài viết vào clipboard!');
+                    setSuccessMessage('Đã sao chép liên kết bài viết vào clipboard!');
+                    setTimeout(() => setSuccessMessage(''), 3500);
                   }}
                 >
                   <Icon name="file" size={15} />
@@ -393,10 +465,10 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
       </header>
 
       {/* Feedback alerts */}
-      {savedSuccess && (
+      {successMessage && (
         <div className="haravan-alert-success">
           <Icon name="check" size={18} />
-          <span>Bài viết đã được lưu thành công vào hệ thống!</span>
+          <span>{successMessage}</span>
         </div>
       )}
 
@@ -673,7 +745,7 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
                     type="button"
                     className="toolbar-btn"
                     title="Chèn liên kết"
-                    onClick={insertLinkPrompt}
+                    onClick={openLinkDialog}
                     disabled={isHtmlMode}
                   >
                     🔗
@@ -682,7 +754,7 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
                     type="button"
                     className="toolbar-btn"
                     title="Chèn hình ảnh bằng URL"
-                    onClick={insertImagePrompt}
+                    onClick={() => openMediaDialog('image')}
                     disabled={isHtmlMode}
                   >
                     🖼
@@ -695,7 +767,7 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
                     type="button"
                     className="toolbar-btn"
                     title="Chèn video YouTube"
-                    onClick={insertVideoPrompt}
+                    onClick={() => openMediaDialog('video')}
                     disabled={isHtmlMode}
                   >
                     ▶
@@ -928,13 +1000,8 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
                   type="button"
                   className="haravan-link-action"
                   onClick={() => {
-                    const newDate = window.prompt(
-                      'Nhập ngày giờ hiển thị (định dạng YYYY-MM-DDTHH:mm):',
-                      new Date().toISOString().slice(0, 16)
-                    );
-                    if (newDate) {
-                      updateField('publishDate', new Date(newDate).toISOString());
-                    }
+                    setScheduleValue(new Date(form.publishDate).toISOString().slice(0, 16));
+                    setShowScheduleDialog(true);
                   }}
                 >
                   Thiết lập ngày cụ thể
@@ -1089,6 +1156,121 @@ export default function HaravanBlogEditor({ blog, mutate, onClose, onDelete }) {
           </section>
         </div>
       </form>
+
+      {showLinkDialog && (
+        <Modal title="Liên kết" onClose={() => setShowLinkDialog(false)}>
+          <div className="haravan-dialog-body">
+            <div className="haravan-dialog-tabs" role="tablist">
+              <button type="button" className={linkTab === 'info' ? 'active' : ''} onClick={() => setLinkTab('info')}>
+                Thông tin liên kết
+              </button>
+              <button type="button" className={linkTab === 'target' ? 'active' : ''} onClick={() => setLinkTab('target')}>
+                Đích
+              </button>
+            </div>
+            {linkTab === 'info' ? (
+              <div className="haravan-dialog-fields">
+                <label>
+                  <span>Display Text</span>
+                  <input
+                    autoFocus
+                    className="haravan-input"
+                    value={linkForm.text}
+                    onChange={(e) => setLinkForm((form) => ({ ...form, text: e.target.value }))}
+                    placeholder="Nội dung hiển thị của liên kết"
+                  />
+                </label>
+                <label>
+                  <span>Kiểu liên kết</span>
+                  <select className="haravan-select" value={linkForm.type} onChange={(e) => setLinkForm((form) => ({ ...form, type: e.target.value }))}>
+                    <option value="url">URL</option>
+                    <option value="email">Email</option>
+                    <option value="phone">Số điện thoại</option>
+                  </select>
+                </label>
+                <div className="haravan-link-url-row">
+                  {linkForm.type === 'url' && (
+                    <label>
+                      <span>Giao thức</span>
+                      <select className="haravan-select" value={linkForm.protocol} onChange={(e) => setLinkForm((form) => ({ ...form, protocol: e.target.value }))}>
+                        <option value="https://">https://</option>
+                        <option value="http://">http://</option>
+                      </select>
+                    </label>
+                  )}
+                  <label className="haravan-link-value">
+                    <span>{linkForm.type === 'email' ? 'Email' : linkForm.type === 'phone' ? 'Số điện thoại' : 'URL'}</span>
+                    <input
+                      className="haravan-input"
+                      value={linkForm.value}
+                      onChange={(e) => setLinkForm((form) => ({ ...form, value: e.target.value }))}
+                      placeholder={linkForm.type === 'email' ? 'contact@example.com' : linkForm.type === 'phone' ? '0901 040 484' : 'dichvudatphuongnam.net'}
+                      onKeyDown={(e) => e.key === 'Enter' && confirmLink()}
+                    />
+                  </label>
+                </div>
+              </div>
+            ) : (
+              <div className="haravan-dialog-fields">
+                <label>
+                  <span>Mở liên kết tại</span>
+                  <select className="haravan-select" value={linkForm.target} onChange={(e) => setLinkForm((form) => ({ ...form, target: e.target.value }))}>
+                    <option value="_self">Cửa sổ hiện tại</option>
+                    <option value="_blank">Cửa sổ mới</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Tiêu đề liên kết</span>
+                  <input className="haravan-input" value={linkForm.title} onChange={(e) => setLinkForm((form) => ({ ...form, title: e.target.value }))} placeholder="Mô tả ngắn khi rê chuột" />
+                </label>
+              </div>
+            )}
+            <div className="haravan-dialog-actions">
+              <button type="button" className="haravan-btn haravan-btn-primary haravan-confirm-btn" disabled={!linkForm.value.trim()} onClick={confirmLink}>Đồng ý</button>
+              <button type="button" className="haravan-btn haravan-btn-secondary" onClick={() => setShowLinkDialog(false)}>Bỏ qua</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {mediaDialog && (
+        <Modal title={mediaDialog === 'image' ? 'Chèn hình ảnh' : 'Chèn video YouTube'} onClose={() => setMediaDialog('')}>
+          <div className="haravan-dialog-body haravan-dialog-fields">
+            <label>
+              <span>{mediaDialog === 'image' ? 'URL hình ảnh' : 'Liên kết video'}</span>
+              <input autoFocus className="haravan-input" value={mediaUrl} onChange={(e) => setMediaUrl(e.target.value)} />
+            </label>
+            {mediaDialog === 'image' && (
+              <label>
+                <span>Văn bản thay thế (ALT)</span>
+                <input className="haravan-input" value={mediaAlt} onChange={(e) => setMediaAlt(e.target.value)} />
+              </label>
+            )}
+            <div className="haravan-dialog-actions">
+              <button type="button" className="haravan-btn haravan-btn-primary haravan-confirm-btn" onClick={confirmMedia}>Đồng ý</button>
+              <button type="button" className="haravan-btn haravan-btn-secondary" onClick={() => setMediaDialog('')}>Bỏ qua</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {showScheduleDialog && (
+        <Modal title="Thiết lập ngày hiển thị" onClose={() => setShowScheduleDialog(false)}>
+          <div className="haravan-dialog-body haravan-dialog-fields">
+            <label>
+              <span>Ngày và giờ xuất bản</span>
+              <input autoFocus className="haravan-input" type="datetime-local" value={scheduleValue} onChange={(e) => setScheduleValue(e.target.value)} />
+            </label>
+            <div className="haravan-dialog-actions">
+              <button type="button" className="haravan-btn haravan-btn-primary haravan-confirm-btn" onClick={() => {
+                updateField('publishDate', new Date(scheduleValue).toISOString());
+                setShowScheduleDialog(false);
+              }}>Đồng ý</button>
+              <button type="button" className="haravan-btn haravan-btn-secondary" onClick={() => setShowScheduleDialog(false)}>Bỏ qua</button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Change Image Modal */}
       {showImageDialog && (

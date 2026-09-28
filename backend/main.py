@@ -846,12 +846,28 @@ class SettingsInput(StrictModel):
     landline: str = Field(default='', max_length=30)
     working_hours: str = Field(default='', max_length=300)
     map_url: str = Field(default='https://maps.app.goo.gl/57dZpeMw67tToEGt7', pattern=r'^https://', max_length=500)
+    quick_contacts_enabled: bool = True
+    quick_phone_enabled: bool = True
+    quick_phone: str = Field(default='0901 040 484', max_length=30)
+    quick_messenger_enabled: bool = True
+    quick_messenger_url: str = Field(default='https://m.me/datphuongnamdafuna', max_length=500)
+    quick_email_enabled: bool = True
+    quick_email: str = Field(default='thanhlan.datphuongnam@gmail.com', pattern=r'^[^\s@]+@[^\s@]+\.[^\s@]+$', max_length=200)
+    quick_contact_enabled: bool = True
+    quick_contact_url: str = Field(default='#/lien-he', max_length=500)
 
     @field_validator('qr_image')
     @classmethod
     def validate_image(cls, v):
         if v and not (v.startswith('https://') or ((v.startswith('/images/') or v.startswith('/api/media/')) and '..' not in v)): raise ValueError('QR phải là URL HTTPS hoặc ảnh đã tải lên.')
         return v
+
+    @field_validator('quick_messenger_url', 'quick_contact_url')
+    @classmethod
+    def validate_quick_url(cls, value):
+        if value and not (value.startswith('https://') or value.startswith('#/')):
+            raise ValueError('Liên kết nhanh phải dùng HTTPS hoặc đường dẫn #/.')
+        return value
 
 @app.put('/api/admin/settings')
 def save_settings(data: SettingsInput, person=Depends(admin)):

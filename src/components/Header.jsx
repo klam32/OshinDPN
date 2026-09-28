@@ -154,7 +154,7 @@ export default function Header({
               'about',
               'Giới thiệu',
               <>
-                {sortedPages(pages).map((p) => (
+                {sortedPages(pages.filter((p) => p.type !== 'policy')).map((p) => (
                   <a key={p.id} href={pageHref(p.id)} onClick={closeMenus}>
                     {p.nav_title}
                   </a>

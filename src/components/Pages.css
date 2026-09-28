@@ -402,6 +402,55 @@
   margin-bottom: 22px;
 }
 
+.policy-page-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 58px;
+  padding-top: 62px;
+  padding-bottom: 82px;
+  align-items: start;
+}
+
+.policy-article > h1 {
+  color: #1f2f3e;
+  font-size: clamp(26px, 3vw, 36px);
+  margin: 0 0 30px;
+}
+
+.policy-article .page-prose h2 {
+  color: #123f70;
+  font-size: 22px;
+  margin-top: 34px;
+}
+
+.policy-article .page-prose h3 {
+  color: #263a4e;
+  font-size: 18px;
+  margin: 25px 0 10px;
+}
+
+.policy-article .page-prose p,
+.policy-article .page-prose li {
+  color: #384b5d;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.policy-article .page-prose ul,
+.policy-article .page-prose ol {
+  padding-left: 23px;
+  margin: 12px 0 22px;
+}
+
+.policy-article .page-prose li {
+  margin-bottom: 8px;
+}
+
+.policy-directory {
+  position: sticky;
+  top: 112px;
+}
+
 .article-reference-layout {
   grid-template-columns: minmax(0, 1fr) 300px;
   gap: 60px;
@@ -1059,6 +1108,15 @@
     margin-top: 10px;
   }
   .article-sidebar {
+    position: static;
+  }
+  .policy-page-layout {
+    grid-template-columns: 1fr;
+    padding-top: 38px;
+    padding-bottom: 50px;
+    gap: 34px;
+  }
+  .policy-directory {
     position: static;
   }
   .article-related-grid {

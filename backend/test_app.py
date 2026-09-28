@@ -261,6 +261,21 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual({m['status'] for m in self.client.get('/api/orders').json()[0]['mail']}, {'sent'})
 
     def test_admin_content_and_public_visibility(self):
+        bootstrap = self.client.get('/api/bootstrap').json()
+        policy_ids = {p['id'] for p in bootstrap['pages'] if p.get('type') == 'policy'}
+        self.assertEqual(policy_ids, {'chinh-sach-bao-mat', 'chinh-sach-doi-tra', 'dieu-khoan-dich-vu'})
+        privacy = next(p for p in bootstrap['pages'] if p['id'] == 'chinh-sach-bao-mat')
+        self.assertIn('Thông tin Cá nhân Chúng tôi Thu thập', privacy['body'])
+        self.assertTrue(bootstrap['settings']['quick_contacts_enabled'])
+        self.assertEqual(bootstrap['settings']['quick_messenger_url'], 'https://m.me/datphuongnamdafuna')
+        privacy['title'] = 'Chính sách bảo mật đã cập nhật'
+        self.admin.put('/api/admin/pages/chinh-sach-bao-mat', json=privacy).raise_for_status()
+        updated_privacy = next(
+            p for p in self.client.get('/api/bootstrap').json()['pages']
+            if p['id'] == 'chinh-sach-bao-mat'
+        )
+        self.assertEqual(updated_privacy['title'], 'Chính sách bảo mật đã cập nhật')
+        self.assertEqual(updated_privacy['type'], 'policy')
         service = services()[0]
         service['active'] = False
         self.admin.put(f'/api/admin/services/{service["id"]}', json=service).raise_for_status()

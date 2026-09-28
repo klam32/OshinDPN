@@ -158,6 +158,32 @@ export function CompanyPage({ page, data, openBooking, openChat }) {
   );
 }
 
+export function PolicyPage({ page, pages }) {
+  const policies = sortedPages(pages.filter((item) => item.type === 'policy'));
+  return (
+    <main>
+      <PageBanner title={page.title} />
+      <div className="container policy-page-layout">
+        <article className="policy-article">
+          <h1>{page.title}</h1>
+          <TextBody body={page.body} />
+        </article>
+        <aside className="page-directory policy-directory">
+          <h2>Danh mục trang</h2>
+          <a href="#/gioi-thieu">Giới thiệu <Icon name="chevron" size={14} /></a>
+          {policies.map((item) => (
+            <a key={item.id} href={pageHref(item.id)} aria-current={item.id === page.id ? 'page' : undefined}>
+              {item.nav_title}
+              <Icon name="chevron" size={14} />
+            </a>
+          ))}
+          <a href="#/lien-he">Liên hệ <Icon name="chevron" size={14} /></a>
+        </aside>
+      </div>
+    </main>
+  );
+}
+
 export function HistoryPage({ page, data, openBooking, openChat }) {
   const sections = page.sections || [];
   const journey = sections.find((s) => s.id === 'journey');

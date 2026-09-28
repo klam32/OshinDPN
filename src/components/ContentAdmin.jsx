@@ -10,7 +10,7 @@ export function PageEditor({ page, mutate, onClose }) {
     [busy, setBusy] = useState(false);
   const input = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   return (
-    <Modal wide title="Chỉnh sửa trang giới thiệu" onClose={onClose}>
+    <Modal wide title={page.type === 'policy' ? 'Chỉnh sửa trang chính sách' : 'Chỉnh sửa trang giới thiệu'} onClose={onClose}>
       <form
         className="editor-body content-editor"
         onSubmit={async (e) => {
@@ -58,7 +58,7 @@ export function PageEditor({ page, mutate, onClose }) {
           value={form.image}
           onChange={(value) => input('image', value)}
         />
-        <Field label="Nội dung (ngắt đoạn bằng một dòng trống)">
+        <Field label={page.type === 'policy' ? 'Nội dung chính sách (hỗ trợ HTML)' : 'Nội dung (ngắt đoạn bằng một dòng trống)'}>
           <textarea
             rows={14}
             required
@@ -236,7 +236,7 @@ export function PriceEditor({ item, services, mutate, onClose }) {
 export function ContentPanel({ pages, onEdit }) {
   return (
     <section className="admin-panel">
-      <h3>Trang giới thiệu & thông tin công ty</h3>
+      <h3>Trang nội dung, giới thiệu & chính sách</h3>
       <p className="muted">
         Cập nhật nội dung, ảnh và trạng thái xuất bản. Trang ẩn sẽ không còn hiển thị trong menu và
         dữ liệu tư vấn của Nở.

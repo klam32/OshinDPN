@@ -97,6 +97,15 @@ DEFAULT_SETTINGS = {
     'tax_percent': 0, 'moving_km_rate': 15000,
     'bank_name': '', 'bank_account': '', 'bank_owner': '', 'qr_image': '',
     'quote_note': 'Đơn giá minh họa, chưa phải báo giá chính thức. Chi phí cuối cùng được xác nhận sau khảo sát và thống nhất phạm vi công việc.',
+    'quick_contacts_enabled': True,
+    'quick_phone_enabled': True,
+    'quick_phone': '0901 040 484',
+    'quick_messenger_enabled': True,
+    'quick_messenger_url': 'https://m.me/datphuongnamdafuna',
+    'quick_email_enabled': True,
+    'quick_email': 'thanhlan.datphuongnam@gmail.com',
+    'quick_contact_enabled': True,
+    'quick_contact_url': '#/lien-he',
 }
 
 def init_db():
@@ -185,6 +194,12 @@ def init_db():
                 else:
                     c.execute('INSERT INTO site_content VALUES(?,?) ON CONFLICT DO NOTHING', (page['id'], dump(page)))
             c.execute("INSERT INTO content_migrations VALUES('company-content-v2') ON CONFLICT DO NOTHING")
+        if not c.execute("SELECT 1 FROM content_migrations WHERE id='company-content-v3-policies'").fetchone():
+            company = json.loads((ROOT / 'src/data/company.json').read_text(encoding='utf-8'))
+            for page in company['pages']:
+                if page.get('type') == 'policy':
+                    c.execute('INSERT INTO site_content VALUES(?,?) ON CONFLICT DO NOTHING', (page['id'], dump(page)))
+            c.execute("INSERT INTO content_migrations VALUES('company-content-v3-policies') ON CONFLICT DO NOTHING")
         articles = [
             ('clean-home', 'Một ngôi nhà sạch bắt đầu từ những thói quen nhỏ', 'Mẹo chăm sóc nhà', 'Gợi ý sắp xếp lịch vệ sinh để tổ ấm luôn gọn gàng mà vẫn có thời gian cho bản thân.', 'Chia việc theo từng khu vực: bếp, phòng khách, phòng ngủ và nhà tắm. Ưu tiên lau các bề mặt sử dụng hằng ngày và thông gió khi dọn dẹp.\n\nVới những hạng mục cần thiết bị chuyên dụng, hãy mô tả diện tích, hiện trạng và thời gian mong muốn để đội ngũ tư vấn chuẩn bị phương án phù hợp.\n\nBạn có thể chọn dịch vụ vệ sinh hoặc đặt khảo sát ngay trên website.', '/images/hero.jpg'),
             ('moving-plan', 'Chuyển văn phòng: chuẩn bị gì để mọi việc nhẹ nhàng?', 'Kinh nghiệm dịch vụ', 'Một danh sách chuẩn bị đơn giản giúp quá trình đóng gói và di dời dễ theo dõi hơn.', 'Lập danh sách tài sản theo từng phòng, ghi rõ số lượng và đánh dấu đồ dễ vỡ. Sao lưu dữ liệu trước khi di chuyển thiết bị.\n\nCung cấp địa chỉ đi và đến, số tầng, tình trạng thang máy và khung giờ được vận chuyển. Những thông tin này giúp nhân viên xây dựng phương án và chiết tính chính xác hơn.', '/images/service-2.jpg'),
@@ -200,9 +215,11 @@ def init_db():
         row = c.execute('SELECT data FROM settings WHERE id=1').fetchone()
         if row:
             curr_settings = json.loads(row['data'])
+            for key, value in DEFAULT_SETTINGS.items():
+                curr_settings.setdefault(key, value)
             if curr_settings.get('email') == 'thanhlan.datphuongnam@gmail.com':
                 curr_settings['email'] = os.getenv('ADMIN_EMAIL', 'adminluanvann@gmail.com')
-                c.execute('UPDATE settings SET data=? WHERE id=1', (dump(curr_settings),))
+            c.execute('UPDATE settings SET data=? WHERE id=1', (dump(curr_settings),))
         c.execute("UPDATE outbox SET status='cancelled', error='Hủy gửi mail thanhlan theo cấu hình mới' WHERE recipient='thanhlan.datphuongnam@gmail.com' AND status='pending'")
 
 def settings():

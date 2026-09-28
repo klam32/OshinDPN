@@ -11,6 +11,7 @@ import {
   JourneyPage,
   NewsPage,
   NotFoundPage,
+  PolicyPage,
   PricingPage,
   VisionPage,
   blogHref,
@@ -33,6 +34,15 @@ const fallbackSettings = {
   hero_title: 'Nhà sạch thảnh thơi.\nCuộc sống rạng ngời.',
   hero_description:
     'Từ tổ ấm đến nơi làm việc, Đất Phương Nam chăm chút từng không gian để bạn an tâm dành thời gian cho những điều yêu thương.',
+  quick_contacts_enabled: true,
+  quick_phone_enabled: true,
+  quick_phone: '0901 040 484',
+  quick_messenger_enabled: true,
+  quick_messenger_url: 'https://m.me/datphuongnamdafuna',
+  quick_email_enabled: true,
+  quick_email: 'thanhlan.datphuongnam@gmail.com',
+  quick_contact_enabled: true,
+  quick_contact_url: '#/lien-he',
 };
 
 export default function App() {
@@ -184,6 +194,8 @@ export default function App() {
               openBooking={openBooking}
               openChat={() => setChatOpen(true)}
             />
+          ) : contentPage?.type === 'policy' ? (
+            <PolicyPage page={contentPage} pages={data.pages || []} />
           ) : contentPage ? (
             <CompanyPage
               page={contentPage}
@@ -261,10 +273,9 @@ export default function App() {
                 <h4>CHÍNH SÁCH & PHÁP LÝ</h4>
                 <a href="#">Trang chủ</a>
                 <a href="#/gioi-thieu">Giới thiệu</a>
-                <a href="#/bang-gia">Bảng giá dịch vụ</a>
-                <a href="#/tin-tuc">Tin tức</a>
-                <a href="#/lien-he">Liên hệ</a>
-                <button onClick={() => setFeedback(true)}>Phản hồi & báo lỗi</button>
+                <a href="#/chinh-sach-bao-mat">Chính sách bảo mật</a>
+                <a href="#/chinh-sach-doi-tra">Chính sách đổi trả</a>
+                <a href="#/dieu-khoan-dich-vu">Điều khoản dịch vụ</a>
               </div>
             </div>
             <div className="container footer-bottom">
@@ -275,6 +286,36 @@ export default function App() {
             </div>
             <button className="footer-back-top" aria-label="Lên đầu trang" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>⌃</button>
           </footer>
+          {data.settings.quick_contacts_enabled && (
+            <nav className="quick-contact-rail" aria-label="Liên hệ nhanh">
+              {(data.settings.quick_phone_enabled ?? true) && (
+                <a href={`tel:${String(data.settings.quick_phone || data.settings.hotline).replaceAll(' ', '')}`} className="quick-contact-phone" aria-label="Gọi điện thoại">
+                  <Icon name="phone" size={20} /><span>Gọi ngay</span>
+                </a>
+              )}
+              {(data.settings.quick_messenger_enabled ?? true) && data.settings.quick_messenger_url && (
+                <a href={data.settings.quick_messenger_url} target="_blank" rel="noreferrer" className="quick-contact-messenger" aria-label="Nhắn Messenger">
+                  <Icon name="chat" size={20} /><span>Messenger</span>
+                </a>
+              )}
+              {(data.settings.quick_email_enabled ?? true) && data.settings.quick_email && (
+                <a href={`mailto:${data.settings.quick_email}`} className="quick-contact-mail" aria-label="Gửi email">
+                  <Icon name="mail" size={20} /><span>Email</span>
+                </a>
+              )}
+              {(data.settings.quick_contact_enabled ?? true) && data.settings.quick_contact_url && (
+                <a
+                  href={data.settings.quick_contact_url}
+                  target={data.settings.quick_contact_url.startsWith('https://') ? '_blank' : undefined}
+                  rel={data.settings.quick_contact_url.startsWith('https://') ? 'noreferrer' : undefined}
+                  className="quick-contact-map"
+                  aria-label="Mở trang liên hệ hoặc bản đồ"
+                >
+                  <Icon name="pin" size={20} /><span>Liên hệ</span>
+                </a>
+              )}
+            </nav>
+          )}
           <Chat open={chatOpen} setOpen={setChatOpen} sessionKey={user?.id || 'guest'} />
           <button className="feedback-float" onClick={() => setFeedback(true)}>
             <Icon name="report" size={15} />

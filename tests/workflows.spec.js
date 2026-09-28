@@ -4,7 +4,7 @@ const headers = { 'X-Requested-With': 'OshinWeb' };
 const loginAdmin = async (page) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  await page.getByLabel('Email').fill('admin@e2e.local');
+  await page.getByRole('dialog').getByLabel('Email', { exact: true }).fill('admin@e2e.local');
   await page.getByLabel('Mật khẩu').fill('E2e-password-strong-123');
   await page.getByRole('dialog').getByRole('button', { name: 'Đăng nhập và nhận OTP', exact: true }).click();
   await page.getByLabel('Mã xác thực OTP').fill('100000');
@@ -173,7 +173,14 @@ test('Quản trị: xử lý đơn, giá, QR và chỉnh Blog, dịch vụ, cấ
     .click();
   await page.getByRole('button', { name: 'Viết bài mới' }).click();
   await page.getByLabel('Tiêu đề').fill('Bài viết kiểm thử E2E');
+  await page.locator('button[title="Chèn liên kết"]').click();
+  const linkDialog = page.getByRole('dialog', { name: 'Liên kết' });
+  await linkDialog.getByLabel('Display Text').fill('Website kiểm thử');
+  await linkDialog.getByLabel('URL', { exact: true }).fill('example.com/kiem-thu');
+  await linkDialog.getByRole('button', { name: 'Đồng ý' }).click();
+  await expect(linkDialog).toHaveCount(0);
   await page.getByRole('button', { name: 'Mã HTML' }).click();
+  await expect(page.locator('.haravan-html-textarea')).toHaveValue(/https:\/\/example\.com\/kiem-thu/);
   await page.locator('.haravan-html-textarea').fill('<p>Đây là nội dung bài viết kiểm thử dài hơn hai mươi ký tự.</p>');
   await page.getByRole('button', { name: 'Thêm trích dẫn' }).click();
   await page.getByLabel('Tóm tắt bài viết').fill('Tóm tắt bài viết kiểm thử tự động');
